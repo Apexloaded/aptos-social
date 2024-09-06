@@ -16,6 +16,10 @@
 # production
 /build
 
+# aptos
+.aptos
+contract/build
+
 # misc
 .DS_Store
 *.pem
