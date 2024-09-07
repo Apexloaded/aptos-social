@@ -12,13 +12,20 @@
     "@aptos-labs/ts-sdk": "^1.27.1",
     "@aptos-labs/wallet-adapter-react": "^3.6.2",
     "@irys/sdk": "^0.2.11",
+    "@reduxjs/toolkit": "^2.2.7",
+    "@tanstack/query-sync-storage-persister": "^5.54.1",
     "@tanstack/react-query": "^5.55.0",
+    "@tanstack/react-query-persist-client": "^5.55.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.439.0",
     "next": "14.2.8",
+    "next-nprogress-bar": "^2.3.13",
     "react": "^18",
     "react-dom": "^18",
-    "tailwind-merge": "^2.5.2"
+    "react-hot-toast": "^2.4.1",
+    "react-redux": "^9.1.2",
+    "tailwind-merge": "^2.5.2",
+    "tailwind-scrollbar-hide": "^1.1.7"
   },
   "devDependencies": {
     "@types/node": "^20",

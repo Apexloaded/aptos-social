@@ -7,13 +7,29 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    screens: {
+      xs: "500px",
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+    },
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        transparent: "transparent",
+        current: "currentColor",
+        primary: "var(--primary)",
+        dark: "var(--dark)",
+        medium: "var(--medium)",
+        white: "var(--white)",
+        danger: "var(--danger)",
+        warning: "var(--warning)",
+        info: "var(--info)",
+        success: "var(--success)",
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwind-scrollbar-hide")],
 };
 export default config;
