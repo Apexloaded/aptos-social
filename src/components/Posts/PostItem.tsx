@@ -12,6 +12,8 @@ import { IPostItem } from "@/interfaces/feed.interface";
 import { PostButtons } from "./PostButtons";
 import { Bookmark } from "./Buttons/Bookmark";
 import { useAppDispatch } from "@/hooks/redux.hook";
+import CreatorName from "../Creator/CreatorName";
+import CreatorPFP from "../Creator/CreatorPFP";
 
 export function PostItem({ post }: IPostItem) {
   const router = useRouter();
@@ -27,10 +29,18 @@ export function PostItem({ post }: IPostItem) {
     });
     // dispatch(selectPost(post));
   };
+
   return (
     <div className="bg-white dark:bg-dark p-5 rounded-2xl shadow-sm">
       <div className="flex items-center justify-between">
-        <div></div>
+        <div className="flex items-center gap-x-2">
+          <CreatorPFP username="elonmusk" name="Elon Musk" />
+          <CreatorName
+            username="elonmusk"
+            name="Elon Musk"
+            createdAt="2024-09-08T10:34:23.000Z"
+          />
+        </div>
         <div className="flex items-center gap-x-2">
           <Button size="icon" className="h-9 w-9">
             <BellRingIcon size={20} />

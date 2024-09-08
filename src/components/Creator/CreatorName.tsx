@@ -17,11 +17,13 @@ function CreatorName({ username, name, createdAt }: Props) {
         href={routes.app.profile(`${username}`)}
         className="flex items-center space-x-1"
       >
-        <p className="font-semibold text-sm capitalize text-dark">{name}</p>
+        <p className="font-semibold text-sm capitalize text-dark dark:text-white/80">
+          {name}
+        </p>
         <BlueCheckMark />
-        <p className="text-xs text-medium">@{username}</p>
+        <p className="text-xs text-dark/80 dark:text-white/80">@{username}</p>
       </Link>
-      <p className="text-xs text-medium">
+      <p className="text-xs text-dark/60 dark:text-white/60">
         <Moment fromNow>{createdAt}</Moment>
       </p>
     </div>

@@ -12,7 +12,7 @@ export default function Home() {
     <Container>
       <div className="flex space-x-5">
         <Section className="bg-muted dark:bg-dark-light px-5">
-          <div className="max-w-md bg-muted dark:bg-dark-light mx-auto w-full sticky top-0">
+          <div className="max-w-md bg-muted dark:bg-dark-light mx-auto w-full sticky top-0 z-50">
             <Header title="Feeds" isBack={false} />
           </div>
           <Posts />
