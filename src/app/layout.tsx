@@ -5,6 +5,7 @@ import { ReduxProvider } from "@/providers/ReduxProvider";
 import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import { HelperProvider } from "@/providers/HelperProvider";
 import { AptosWalletProvider } from "@/providers/AptosProvider";
+import { ThemeProvider } from "@/context/theme.context";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,13 +31,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-dark overflow-clip`}
       >
         <ReduxProvider>
           <AptosWalletProvider>
             <ReactQueryProvider>
-              {children}
-              <HelperProvider />
+              <ThemeProvider>
+                {children}
+                <HelperProvider />
+              </ThemeProvider>
             </ReactQueryProvider>
           </AptosWalletProvider>
         </ReduxProvider>

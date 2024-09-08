@@ -8,7 +8,7 @@ export function HelperProvider() {
     <>
       <ProgressBar
         height="4px"
-        color="#4338ca"
+        color="#4cae4f"
         options={{ showSpinner: false }}
         shallowRouting
       />
