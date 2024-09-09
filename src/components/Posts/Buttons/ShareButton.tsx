@@ -1,6 +1,7 @@
 import { ShareIcon } from "lucide-react";
+import { ButtonProps } from "../PostButtons";
 
-export function Share() {
+export function ShareButton({ post }: ButtonProps) {
   return (
     <div role="button" className="flex items-center gap-x-1 group">
       <ShareIcon

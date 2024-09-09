@@ -25,3 +25,15 @@ export const getFirstLetters = (fullName: string) => {
   }
   return initials;
 };
+
+export const countWords = (sentence: string) => {
+  const trimmedSentence = sentence.trim();
+  const wordsArray = trimmedSentence.split(/\s+/);
+  const nonEmptyWordsArray = wordsArray.filter((word) => word !== "");
+  const length = trimmedSentence === "" ? 0 : nonEmptyWordsArray.length;
+  return length;
+};
+
+export const walletToLowercase = (wallet: string) => {
+  return wallet.toLowerCase();
+};

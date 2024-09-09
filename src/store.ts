@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import sidebarReducer from "./slices/sidebar/sidebar.slice";
+import postSelectedReducer from "./slices/posts/post-selected.slice";
 
 export const store = configureStore({
   reducer: {
     sidebar: sidebarReducer,
+    "post-selected": postSelectedReducer,
   },
 });
 

@@ -29,6 +29,7 @@ import clsx from "clsx";
 import { useMediaQuery } from "@/hooks/media-query.hook";
 import { Button } from "../ui/button";
 import { ToggleTheme } from "../ToggleTheme";
+import { MintPost } from "../Posts/MintPost";
 
 export default function Sidebar() {
   const isLg = useMediaQuery("(max-width: 1024px)");
@@ -223,14 +224,8 @@ export default function Sidebar() {
           </div>
         </div>
         <div className="mb-5">
-          <div
-            onClick={() => setMintModal(true)}
-            role={"button"}
-            className="hidden lg:flex justify-end xl:justify-start px-[0.8rem] cursor-pointer"
-          >
-            <Button size="lg" className="w-full font-bold">
-              Mint a Post
-            </Button>
+          <div className="hidden lg:flex justify-end xl:justify-start px-[0.8rem] cursor-pointer">
+            <MintPost />
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { BookmarkIcon } from "lucide-react";
+import { ButtonProps } from "../PostButtons";
 
-export function Bookmark() {
+export function BookmarkButton({ post }: ButtonProps) {
   return (
     <BookmarkIcon
       size={20}

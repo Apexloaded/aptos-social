@@ -1,6 +1,7 @@
 import { HeartIcon } from "lucide-react";
+import { ButtonProps } from "../PostButtons";
 
-export function Like() {
+export function LikeButton({post}: ButtonProps) {
   return (
     <div role="button" className="flex items-center gap-x-1 group">
       <HeartIcon

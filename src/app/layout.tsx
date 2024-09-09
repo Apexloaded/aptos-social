@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import "./globals.css";
+import "./globals.scss";
 import { ReduxProvider } from "@/providers/ReduxProvider";
 import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import { HelperProvider } from "@/providers/HelperProvider";

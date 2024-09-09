@@ -27,7 +27,8 @@ export const routes = {
       withdraw: "/wallet/withdraw",
     },
     profile: (username: string) => `/profile?u=${username}`,
-    mints: (postId: string) => `/mints?id=${postId}`,
+    mints: (username: string, postId: string) =>
+      `/${username}/mints/${postId}`,
     hashtag: {
       index: "/hashtag",
       hashtag: (hashtag: string) => `/hashtag/${hashtag}`,

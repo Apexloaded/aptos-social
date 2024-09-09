@@ -6,7 +6,9 @@ const posts: IPost[] = [
     author: "0x1",
     tokenId: "23",
     creator: {
-      id: "",
+      id: "elon123",
+      username: "elonmusk",
+      name: "Elon Musk"
     },
     content:
       "Playing around with stable diffusion AI generator and I'm amazed. it's not even a year since all the AI buss begam and we've come so far! I can't imagine what's going to happen in the next few days",
@@ -33,7 +35,7 @@ const posts: IPost[] = [
       id: "",
     },
     content:
-      "Playing around with stable diffusion AI generator and I'm amazed. it's not even a year since all the AI buss begam and we've come so far! I can't imagine what's going to happen in the next few days",
+      "Playing around with stable diffusion @AI generator and I'm amazed. it's not even a year since all the AI buss begam and we've come so far! I can't imagine what's going to happen in the next few days. Playing around with stable diffusion AI generator and I'm amazed. it's not even a year since all the AI buss begam and we've come so far! I can't imagine what's going to happen in the next few days",
     createdAt: "",
     updatedAt: "",
     remintPrice: "",

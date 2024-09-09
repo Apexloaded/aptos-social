@@ -1,13 +1,17 @@
-import { Comment } from "./Buttons/Comment";
-import { Like } from "./Buttons/Like";
-import { Share } from "./Buttons/Share";
+import { IPost } from "@/interfaces/feed.interface";
+import { CommentButton } from "./Buttons/CommentButton";
+import { LikeButton } from "./Buttons/LikeButton";
+import { ShareButton } from "./Buttons/ShareButton";
 
-export function PostButtons() {
+export interface ButtonProps {
+  post: IPost;
+}
+export function PostButtons({ post }: ButtonProps) {
   return (
     <div className="flex items-center space-x-4">
-      <Like />
-      <Comment />
-      <Share />
+      <LikeButton post={post} />
+      <CommentButton post={post} />
+      <ShareButton post={post} />
     </div>
   );
 }

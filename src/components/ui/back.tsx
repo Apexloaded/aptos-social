@@ -5,10 +5,18 @@ import { Button } from "./button";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-function BackButton() {
+type BackButtonProps = {
+  shiftBtn?: boolean;
+};
+function BackButton({ shiftBtn }: BackButtonProps) {
   const router = useRouter();
   return (
-    <Button onClick={() => router.back()} size="icon">
+    <Button
+      variant={"ghost"}
+      onClick={() => router.back()}
+      size="icon"
+      className={shiftBtn ? "-translate-x-3" : ""}
+    >
       <ArrowLeft height={23} />
     </Button>
   );
