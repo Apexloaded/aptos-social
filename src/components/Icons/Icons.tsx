@@ -9,12 +9,12 @@ export function Icon() {
       src={Logo}
       width={260}
       height={260}
-      alt={`dexa`}
+      alt={`aptos-social-icon`}
       className="h-8 w-8 rounded-full"
     />
   );
 }
-export function DexaLogo() {
+export function AptosSocialLogo() {
   return (
     <Link
       href={routes.home}

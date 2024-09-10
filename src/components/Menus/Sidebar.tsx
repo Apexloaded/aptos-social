@@ -23,7 +23,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { DexaLogo, Icon } from "../Icons/Icons";
+import { Icon } from "../Icons/Icons";
 import { routes } from "@/routes";
 import clsx from "clsx";
 import { useMediaQuery } from "@/hooks/media-query.hook";
