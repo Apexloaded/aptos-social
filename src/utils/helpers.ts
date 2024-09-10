@@ -1,3 +1,5 @@
+import { aptosClient } from "./aptosClient";
+
 export const APT_DECIMALS = 8;
 
 export const convertAmountFromHumanReadableToOnChain = (
@@ -58,3 +60,8 @@ export function formatWalletAddress(
 
   return `${prefix}${div}${suffix}`;
 }
+
+export const isValidAptosAddress = (address: string) => {
+  const hexRegex = /^[0-9a-fA-F]{64}$/;
+  return typeof address === "string" && hexRegex.test(address);
+};

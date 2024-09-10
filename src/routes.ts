@@ -1,11 +1,11 @@
 export const fullScreenPath = ["/live/video"];
-
+export const protectedRoutes = ["/feeds"];
+export const publicRoutes = ["/"];
 export const routes = {
   home: "/",
-  login: "/auth/login",
-  register: "/auth/welcome",
+  login: "/login",
   app: {
-    home: "/home",
+    home: "/feeds",
     explore: "/explore",
     messages: {
       index: "/messages",
@@ -27,8 +27,7 @@ export const routes = {
       withdraw: "/wallet/withdraw",
     },
     profile: (username: string) => `/profile?u=${username}`,
-    mints: (username: string, postId: string) =>
-      `/${username}/mints/${postId}`,
+    mints: (username: string, postId: string) => `/${username}/mints/${postId}`,
     hashtag: {
       index: "/hashtag",
       hashtag: (hashtag: string) => `/hashtag/${hashtag}`,

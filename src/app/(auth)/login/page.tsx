@@ -5,6 +5,7 @@ import { AptosSocialLogo } from "@/components/Icons/Icons";
 import { ListConnectors } from "@/components/Auth/ListConnectors";
 import SignInModal from "@/components/Auth/Signature";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { getNonce } from "@/actions/auth.action";
 
 export default function Login() {
   const [signModal, setSignModal] = useState<boolean>(false);
@@ -13,6 +14,7 @@ export default function Login() {
   useEffect(() => {
     async function iniModal() {
       if (connected && account) {
+        const response = await getNonce(account.address);
         setSignModal(true);
       }
     }

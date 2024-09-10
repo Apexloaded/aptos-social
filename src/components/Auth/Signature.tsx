@@ -39,6 +39,14 @@ function SignInModal({ setIsOpen, isOpen }: Props) {
       if (!account) return;
       loading({ msg: "Initializing..." });
 
+      const response = await fetch(
+        `/api/auth/generate-nonce?address=${account.address}`
+      );
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+
+      console.log(data);
+
       updateLoading({ msg: "Authenticating..." });
       const signaturePayload = await signMessage({
         address: true,

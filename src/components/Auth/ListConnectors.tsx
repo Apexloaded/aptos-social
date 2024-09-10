@@ -7,7 +7,8 @@ import {
 import { Connector } from "./Connector";
 import CreateSmartWallet from "./CreateSmartWallet";
 import SignInModal from "./Signature";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import SignModal from "./SignModal";
 
 type Props = {
   isOpen: boolean;
@@ -26,19 +27,30 @@ export function ListConnectors({ isOpen, setIsOpen }: Props) {
 
   return (
     <>
-      <div className="flex flex-col border border-primary/50 rounded-lg overflow-hidden">
-        {availableWallets.map((wallet) => (
-          <Connector key={wallet.name} wallet={wallet} openModal={openModal} />
-        ))}
-      </div>
-      {hasAptosConnectWallets && (
-        <div className="flex flex-col gap-2 pt-3">
-          {aptosConnectWallets.map((wallet) => (
-            <CreateSmartWallet wallet={wallet} />
-          ))}
-        </div>
+      {connected ? (
+        <SignModal isOpen={isOpen} setIsOpen={setIsOpen} />
+      ) : (
+        <>
+          <div className="flex flex-col border border-primary/50 rounded-lg overflow-hidden">
+            {availableWallets.map((wallet) => (
+              <Connector
+                key={wallet.name}
+                wallet={wallet}
+                openModal={openModal}
+              />
+            ))}
+          </div>
+          {hasAptosConnectWallets && (
+            <div className="flex flex-col gap-2 pt-3">
+              {aptosConnectWallets.map((wallet) => (
+                <CreateSmartWallet wallet={wallet} />
+              ))}
+            </div>
+          )}
+        </>
       )}
-      <SignInModal isOpen={isOpen} setIsOpen={setIsOpen} />
+
+      {/* <SignInModal isOpen={isOpen} setIsOpen={setIsOpen} /> */}
     </>
   );
 }
