@@ -42,8 +42,8 @@ export function ListConnectors({ isOpen, setIsOpen }: Props) {
           </div>
           {hasAptosConnectWallets && (
             <div className="flex flex-col gap-2 pt-3">
-              {aptosConnectWallets.map((wallet) => (
-                <CreateSmartWallet wallet={wallet} />
+              {aptosConnectWallets.map((wallet, i) => (
+                <CreateSmartWallet key={i} wallet={wallet} />
               ))}
             </div>
           )}

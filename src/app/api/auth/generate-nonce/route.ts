@@ -8,19 +8,22 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
   try {
+    console.log("Hello server");
     const { searchParams } = new URL(req.url);
     const address = searchParams.get("wallet");
 
+    console.log("Wallet address: " + address);
     if (!address) {
       throw new Error("Missing or invalid address");
     }
 
-    const accountInfo = await aptosClient().account.getAccountInfo({
-      accountAddress: address,
-    });
-    if (!accountInfo) {
-      throw new Error("Account not found");
-    }
+    // const accountInfo = await aptosClient().account.getAccountInfo({
+    //   accountAddress: address,
+    // });
+    // console.log(accountInfo);
+    // if (!accountInfo) {
+    //   throw new Error("Account not found");
+    // }
 
     const auth = await prisma.auth.findUnique({
       where: {
@@ -28,6 +31,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    console.log("auth", auth);
     if (!auth) {
       // Register the account
       const newNonce = generateNonce();
@@ -39,6 +43,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ nonce: auth.nonce });
   } catch (error) {
+    console.log(error);
     return NextResponse.json({ error });
   }
 }

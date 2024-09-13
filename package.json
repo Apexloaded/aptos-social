@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "move:init": "node ./scripts/init",
+    "move:test": "node ./scripts/move/test",
+    "move:compile": "node ./scripts/move/compile",
+    "move:publish": "node ./scripts/move/publish",
+    "move:upgrade": "node ./scripts/move/upgrade"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.27.1",
@@ -16,8 +21,10 @@
     "@hookform/resolvers": "^3.3.4",
     "@irys/sdk": "^0.2.11",
     "@prisma/client": "^5.19.1",
+    "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-popover": "^1.1.1",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-tooltip": "^1.1.2",
     "@reduxjs/toolkit": "^2.2.7",
     "@tanstack/query-sync-storage-persister": "^5.54.1",
     "@tanstack/react-query": "^5.55.0",
@@ -48,10 +55,13 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "dotenv": "^16.4.5",
+    "js-yaml": "^4.1.0",
     "postcss": "^8",
     "prisma": "^5.19.1",
     "sass": "^1.78.0",
     "tailwindcss": "^3.4.1",
+    "tree-kill": "^1.2.2",
     "typescript": "^5"
   }
 }

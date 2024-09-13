@@ -1,5 +1,5 @@
 export const fullScreenPath = ["/live/video"];
-export const protectedRoutes = ["/feeds"];
+export const protectedRoutes = ["/feeds", "/welcome", "/*/mints"];
 export const publicRoutes = ["/"];
 export const routes = {
   home: "/",

@@ -14,7 +14,9 @@ export default function Login() {
   useEffect(() => {
     async function iniModal() {
       if (connected && account) {
+        // console.log("account", account);
         const response = await getNonce(account.address);
+        console.log(response);
         setSignModal(true);
       }
     }

@@ -3,17 +3,16 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model Auth {
-  id Int @id @default(autoincrement())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   signer    String   @unique
   nonce     String
   createdAt DateTime @default(now()) 
   updatedAt DateTime @updatedAt      
-  
+
   @@map("auths")
 }

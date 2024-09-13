@@ -61,7 +61,10 @@ function MediaPreview({ file, onClear, isRounded = true }: MediaPreviewProps) {
                 size="icon"
                 title="Remove"
                 className="dark:text-white dark:bg-dark dark:hover:bg-accent/40"
-                onClick={onClear}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClear();
+                }}
               >
                 <XIcon height={18} />
               </Button>

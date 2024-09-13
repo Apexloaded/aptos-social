@@ -9,6 +9,7 @@ import { IActionResponse } from "@/interfaces/response.interface";
 export async function getNonce(wallet: string): Promise<IActionResponse> {
   try {
     const response = await getApi(`auth/generate-nonce?wallet=${wallet}`);
+    console.log(response);
     if (response && response.nonce) {
       return {
         status: true,

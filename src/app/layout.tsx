@@ -6,6 +6,7 @@ import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import { HelperProvider } from "@/providers/HelperProvider";
 import { AptosWalletProvider } from "@/providers/AptosProvider";
 import { ThemeProvider } from "@/context/theme.context";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -37,8 +38,10 @@ export default function RootLayout({
           <AptosWalletProvider>
             <ReactQueryProvider>
               <ThemeProvider>
-                {children}
-                <HelperProvider />
+                <TooltipProvider delayDuration={100}>
+                  {children}
+                  <HelperProvider />
+                </TooltipProvider>
               </ThemeProvider>
             </ReactQueryProvider>
           </AptosWalletProvider>
