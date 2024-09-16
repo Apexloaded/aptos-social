@@ -1,6 +1,6 @@
 import { WebIrys } from "@irys/sdk";
 import { WalletContextState } from "@aptos-labs/wallet-adapter-react";
-import { getAccountAPTBalance } from "@/view-functions/getAccountAPTBalance";
+import { getAccountAPTBalance } from "@/aptos/view-functions/getAccountAPTBalance";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getWebIrys = async (aptosWallet: any) => {

@@ -1,19 +1,25 @@
-"use client";
+'use client';
 
-import React, { useCallback, useEffect, useState, useRef } from "react";
-import { CheckCheckIcon, CircleAlertIcon, Edit2Icon, Image } from "lucide-react";
-import { Controller, FieldValues, useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
-// import debounce from "debounce";
-import useToast from "@/hooks/toast.hook";
-import { welcomeResolver } from "@/schemas/welcome.schema";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { Button } from "../ui/button";
-import ShowError from "../ui/inputerror";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import FileSelector from "../ui/fileselector";
-import MediaPreview from "../Posts/MediaPreview";
+import React, { useCallback, useEffect, useState, useRef } from 'react';
+import {
+  CheckCheckIcon,
+  CircleAlertIcon,
+  Edit2Icon,
+  Image,
+} from 'lucide-react';
+import { Controller, FieldValues, useForm } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
+import debounce from 'debounce';
+import useToast from '@/hooks/toast.hook';
+import { welcomeResolver } from '@/schemas/welcome.schema';
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { Button } from '../ui/button';
+import ShowError from '../ui/inputerror';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import FileSelector from '../ui/fileselector';
+import MediaPreview from '../Posts/MediaPreview';
+import { isNameTaken } from '@/aptos/aptos.view';
 
 function Welcome() {
   const mediaRef = useRef<HTMLInputElement>(null);
@@ -27,22 +33,22 @@ function Welcome() {
     reset,
     formState: { errors, isSubmitting, isValid },
   } = useForm(welcomeResolver);
-  const username = watch("username");
+  const username = watch('username');
   const { connected } = useWallet();
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const { error, success, loading } = useToast();
 
-  // const checkUsername = useCallback(
-  //   debounce(async (username) => {
-  //     if (username) {
-  //       const res = await refetch();
-  //       setIsAvailable(res.data as boolean);
-  //     } else {
-  //       setIsAvailable(null);
-  //     }
-  //   }, 1000),
-  //   []
-  // );
+  const checkUsername = useCallback(
+    debounce(async (username) => {
+      if (username) {
+        const res = await isNameTaken(username);
+        setIsAvailable(!res as boolean);
+      } else {
+        setIsAvailable(null);
+      }
+    }, 1000),
+    []
+  );
 
   const toggleMedia = () => {
     if (mediaRef.current) mediaRef.current.click();
@@ -51,12 +57,12 @@ function Welcome() {
   const removeMedia = () => {
     reset({ pfp: undefined });
     setMediaFile(null);
-    if (mediaRef.current) mediaRef.current.value = "";
+    if (mediaRef.current) mediaRef.current.value = '';
   };
 
   const proceed = async (data: FieldValues) => {
     try {
-      loading({ msg: "Processing..." });
+      loading({ msg: 'Processing...' });
     } catch (err: any) {
       // const msg = getError(err);
       // error({ msg: `${msg}` });
@@ -74,7 +80,7 @@ function Welcome() {
                 if (ev.target.files) {
                   const file = ev.target.files[0];
                   setMediaFile(file);
-                  setValue("pfp", file);
+                  setValue('pfp', file);
                   onChange(file);
                 }
               }}
@@ -100,12 +106,12 @@ function Welcome() {
             {errors.pfp && <ShowError error={errors.pfp.message} />}
           </>
         )}
-        name={"pfp"}
+        name={'pfp'}
       />
       <div className="text-center mb-4">
         <p className="text-xl font-bold">Setup your account</p>
         <p className="text-dark/60 text-base">
-          Fill in the following information to configure and mint your onchain
+          Fill in the following information to configure and mint your Aptos.Social onchain
           profile.
         </p>
       </div>
@@ -117,14 +123,14 @@ function Welcome() {
               <Label className="mb-1 text-dark/80">Display Name</Label>
               <Input
                 name="name"
-                className="shadow-sm rounded-md border border-medium/30"
+                className="shadow-sm rounded-md border border-medium/30 h-11"
                 placeholder="John Doe"
                 onChange={onChange}
               />
               {errors.name && <ShowError error={errors.name.message} />}
             </div>
           )}
-          name={"name"}
+          name={'name'}
         />
         <Controller
           control={control}
@@ -133,11 +139,11 @@ function Welcome() {
               <Label className="mb-1 text-dark/80">Username</Label>
               <Input
                 name="username"
-                className="shadow-sm rounded-md border border-medium/30"
+                className="shadow-sm rounded-md border border-medium/30 h-11"
                 placeholder="@james"
                 onChange={(e) => {
                   onChange(e);
-                  //checkUsername(e.target.value);
+                  checkUsername(e.target.value);
                   setIsAvailable(null);
                 }}
               />
@@ -159,7 +165,7 @@ function Welcome() {
               {errors.username && <ShowError error={errors.username.message} />}
             </div>
           )}
-          name={"username"}
+          name={'username'}
         />
         <Controller
           control={control}
@@ -169,14 +175,14 @@ function Welcome() {
               <Input
                 name="email"
                 type="email"
-                className="shadow-sm rounded-md border border-medium/30"
+                className="shadow-sm rounded-md border border-medium/30 h-11"
                 placeholder="email@example.com"
                 onChange={onChange}
               />
               {errors.email && <ShowError error={errors.email.message} />}
             </div>
           )}
-          name={"email"}
+          name={'email'}
         />
 
         <div className="flex flex-col gap-5 mt-5">

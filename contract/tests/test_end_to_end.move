@@ -1,6 +1,9 @@
 #[test_only]
 module aptos_social_host::test_end_to_end {
-    use std::string;
+    use std::string::{Self, String};
+    use std::vector;
+    use aptos_std::debug;
+
     use aptos_social_host::aptos_social_utils;
 
     #[test]
@@ -33,4 +36,20 @@ module aptos_social_host::test_end_to_end {
         let result = aptos_social_utils::is_same_string(s1, s2);
         assert!(!result, 1);
     }
+
+    #[test]
+    fun test_hashtag_extractor() {
+        let content = string::utf8(b"hello jeffery #HOW are you #name, let get to know #tags");
+        let result = aptos_social_utils::extract_hashtags(&content);
+        
+        // debug::print<vector<String>>(&result);
+
+        //Verify the that first hashtag is how
+        let hashtag = *vector::borrow(&result, 0);
+        // debug::print<String>(&hashtag);
+        assert!(hashtag == string::utf8(b"how"), 2);
+
+        assert!(vector::length(&result) == 3, 1);
+    }
+    
 }

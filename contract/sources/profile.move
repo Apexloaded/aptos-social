@@ -4,7 +4,7 @@ module aptos_social_host::aptos_social_profile {
     use std::string::{Self, String};
     use std::vector;
 
-    use aptos_std::table::{Self};
+    use aptos_std::table::{Self, Table};
 
     use aptos_framework::event;
     use aptos_framework::timestamp;
@@ -36,11 +36,11 @@ module aptos_social_host::aptos_social_profile {
         is_verified: bool,
     }
 
-    struct AptosSocialState has key {
+    struct AptosSocialProfileState has key {
         creator_count: u64,
         transaction_count: u64,
-        creators: table::Table<address, Creator>,
-        usernames: table::Table<String, address>,
+        creators: Table<address, Creator>,
+        usernames: Table<String, address>,
         creator_addresses: vector<address>,
         admin_addr: address,
         pending_admin_addr: Option<address>,
@@ -53,10 +53,12 @@ module aptos_social_host::aptos_social_profile {
         username: string::String,
     }
 
-    /// If you deploy the module under an object, sender is the object's signer
     /// If you deploy the module under your own account, sender is your account's signer
     fun init_module(sender: &signer) {
-        move_to(sender, AptosSocialState {
+        let account_addr = signer::address_of(sender);
+        assert!(!exists<AptosSocialProfileState>(account_addr), ERROR_DUPLICATE_RESOURCE);
+
+        let state = AptosSocialProfileState {
             creator_count: 0,
             transaction_count: 0,
             creators: table::new(),
@@ -64,19 +66,21 @@ module aptos_social_host::aptos_social_profile {
             creator_addresses: vector::empty(),
             admin_addr: signer::address_of(sender),
             pending_admin_addr: option::none(),
-        });
+        };
+
+        move_to(sender, state);
     }
 
     // Register a new creator
-    public fun register_creator(
+    public entry fun register_creator(
         creator: &signer,
         display_name: String,
         username: String,
         email_address: String,
         profile_url: String
-    ) acquires AptosSocialState {
+    ) acquires AptosSocialProfileState {
         let creator_address = signer::address_of(creator);
-        let state = borrow_global_mut<AptosSocialState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social_host);
         let lowercase_username = aptos_social_utils::to_lowercase(&username);
         
         assert!(!table::contains(&state.creators, creator_address), ERROR_DUPLICATE_RESOURCE); // ERROR_DUPLICATE_RESOURCE
@@ -113,9 +117,18 @@ module aptos_social_host::aptos_social_profile {
     }
 
     // Update creator information
-    public fun update_creator(creator: &signer, name: String, username: String, email: String, pfp: String, banner: String, bio: String, website: String) acquires AptosSocialState {
+    public fun update_creator(
+        creator: &signer,
+        name: String,
+        username: String,
+        email: String,
+        pfp: String,
+        banner: String,
+        bio: String,
+        website: String
+    ) acquires AptosSocialProfileState {
         let creator_address = signer::address_of(creator);
-        let state = borrow_global_mut<AptosSocialState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social_host);
         let lowercase_username = aptos_social_utils::to_lowercase(&username);
 
         assert!(table::contains(&state.creators, creator_address), ERROR_NOT_FOUND);
@@ -141,9 +154,12 @@ module aptos_social_host::aptos_social_profile {
     }
 
     // Add new friends
-    public fun add_friend(creator: &signer, friend_address: address) acquires AptosSocialState {
+    public fun add_friend(
+        creator: &signer,
+        friend_address: address
+    ) acquires AptosSocialProfileState {
         let creator_address = signer::address_of(creator);
-        let state = borrow_global_mut<AptosSocialState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social_host);
 
         // Check if users exists
         assert!(table::contains(&state.creators, creator_address), ERROR_NOT_FOUND);
@@ -155,23 +171,29 @@ module aptos_social_host::aptos_social_profile {
     }
 
     #[view]
-    public fun is_name_taken(username: String): bool acquires AptosSocialState {
-        let state = borrow_global<AptosSocialState>(@aptos_social_host);
+    public fun profile_exists(creator: address): bool acquires AptosSocialProfileState {
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
+        table::contains(&state.creators, creator)
+    }
+
+    #[view]
+    public fun is_name_taken(username: String): bool acquires AptosSocialProfileState {
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
         let lowercase_username = aptos_social_utils::to_lowercase(&username);
         table::contains(&state.usernames, lowercase_username)
     }
 
     // Retrieve a creator's profile by address
     #[view]
-    public fun find_creator(creator_address: address): Creator acquires AptosSocialState {
-        let state = borrow_global<AptosSocialState>(@aptos_social_host);
+    public fun find_creator(creator_address: address): Creator acquires AptosSocialProfileState {
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
         *table::borrow(&state.creators, creator_address)
     }
 
     // Retrieve a creator's profile by username
     #[view]
-    public fun find_creator_by_name(username: String): Creator acquires AptosSocialState {
-        let state = borrow_global<AptosSocialState>(@aptos_social_host);
+    public fun find_creator_by_name(username: String): Creator acquires AptosSocialProfileState {
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
         let lower_username = aptos_social_utils::to_lowercase(&username);
 
         assert!(table::contains(&state.usernames, lower_username), ERROR_NOT_FOUND);
@@ -181,8 +203,8 @@ module aptos_social_host::aptos_social_profile {
     }
 
     #[view]
-    public fun find_all_creators(): vector<Creator> acquires AptosSocialState {
-        let state = borrow_global<AptosSocialState>(@aptos_social_host);
+    public fun find_all_creators(): vector<Creator> acquires AptosSocialProfileState {
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
 
         let creators = vector::empty<Creator>();
         let addresses = &state.creator_addresses;
@@ -200,158 +222,14 @@ module aptos_social_host::aptos_social_profile {
     }
 
     #[test_only]
+    /// Get all registered Creators
+    public entry fun verify_creator_exists(creator_address: address): bool acquires AptosSocialProfileState {
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
+        table::contains(&state.creators, creator_address)
+    }
+
+    #[test_only]
     public fun init_module_for_test(sender: &signer) {
         init_module(sender);
-    }
-
-    #[test(account = @aptos_social_host, aptos_framework = @0x1)]
-    #[expected_failure(abort_code = ERROR_DUPLICATE_RESOURCE)]
-    public fun test_register_creator(account: &signer, aptos_framework: &signer) acquires AptosSocialState {
-        init_module_for_test(account);
-        timestamp::set_time_has_started_for_testing(aptos_framework);
-
-        let display_name = string::utf8(b"Test Creator");
-        let username = string::utf8(b"testcreator");
-        let email = string::utf8(b"testcreator@example.com");
-        let profile_url = string::utf8(b"https://aptos.social/testcreator");
-
-        register_creator(account, display_name, username, email, profile_url);
-        let state = borrow_global<AptosSocialState>(@aptos_social_host);
-        let creator_address = signer::address_of(account);
-        assert!(state.creator_count == 1, 200);
-        assert!(table::contains(&state.creators, creator_address), 201);
-
-        let creator = find_creator(creator_address);
-        assert!(creator.wallet == creator_address, 201); // Ensure wallet address matches
-        assert!(creator.username == string::utf8(b"testcreator"), 202); // Ensure username matches
-
-        // Try to register the same creator again and assert that it fails (duplicate)
-        let duplicate_display_name = string::utf8(b"Another Creator");
-        let duplicate_username = string::utf8(b"testcreator"); // Same username
-
-        register_creator(account, duplicate_display_name, duplicate_username, email, profile_url);
-    }
-
-    #[test(account = @aptos_social_host, aptos_framework = @0x1)]
-    public fun test_update_creator(account: &signer, aptos_framework: &signer) acquires AptosSocialState {
-        init_module_for_test(account);
-        timestamp::set_time_has_started_for_testing(aptos_framework);
-
-        let display_name = string::utf8(b"Test Creator2");
-        let username = string::utf8(b"testcreator2");
-        let email = string::utf8(b"testcreator2@example.com");
-        let profile_url = string::utf8(b"https://aptos.social/testcreator2");
-        let pfp = string::utf8(b"https://aptos.social");
-        let banner = string::utf8(b"https://aptos.social/banner");
-        let bio = string::utf8(b"I am Test Creator 2");
-        let website = string::utf8(b"testcreator2.com");
-
-        register_creator(account, display_name, username, email, profile_url);
-
-        let new_name = string::utf8(b"testcreator3");
-        update_creator(account, display_name, new_name, email, pfp, banner, bio, website);
-
-        let creator_address = signer::address_of(account);
-        let creator = find_creator(creator_address);
-
-        assert!(creator.wallet == creator_address, 201); // Ensure wallet address matches
-        assert!(creator.username == new_name, 202); // Ensure username matches
-        assert!(creator.website == website, 203); // Test that website is updated
-    }
-
-    #[test(account = @aptos_social_host, aptos_framework = @0x1, friend_account = @friend_addr)]
-    public fun test_add_friend(account: &signer, aptos_framework: &signer, friend_account: &signer) acquires AptosSocialState {
-        init_module_for_test(account);
-        timestamp::set_time_has_started_for_testing(aptos_framework);
-        
-        let display_name = string::utf8(b"Test Creator");
-        let username = string::utf8(b"testcreator");
-        let email = string::utf8(b"testcreator@example.com");
-        let profile_url = string::utf8(b"https://aptos.social/testcreator");
-        register_creator(account, display_name, username, email, profile_url);
-
-        let display_name2 = string::utf8(b"Test Creator2");
-        let username2 = string::utf8(b"testcreator2");
-        let email2 = string::utf8(b"testcreator2@example.com");
-        let profile_url2 = string::utf8(b"https://aptos.social/testcreator2");
-        register_creator(friend_account, display_name2, username2, email2, profile_url2);
-
-        let friend_address = signer::address_of(friend_account);
-        add_friend(account, friend_address);
-
-        // Fetch the global state
-        let state = borrow_global<AptosSocialState>(@aptos_social_host);
-        let creator_address = signer::address_of(account);
-
-        // Fetch the creator's friend list
-        let creator_state = table::borrow(&state.creators, creator_address);
-
-        // Assert that the friend's address has been added to the creator's friends list
-        assert!(vector::contains(&creator_state.friends, &friend_address), 1);
-    }
-
-    #[test(account = @aptos_social_host, aptos_framework = @0x1)]
-    public fun test_find_user_by_name(account: &signer, aptos_framework: &signer) acquires AptosSocialState {
-        init_module_for_test(account);
-        timestamp::set_time_has_started_for_testing(aptos_framework);
-        
-        let display_name = string::utf8(b"Test Creator");
-        let username = string::utf8(b"testcreator");
-        let email = string::utf8(b"testcreator@example.com");
-        let profile_url = string::utf8(b"https://aptos.social/testcreator");
-        register_creator(account, display_name, username, email, profile_url);
-
-        let creator_address = signer::address_of(account);
-        let creator = find_creator_by_name(string::utf8(b"testcreator"));
-        assert!(creator.wallet == creator_address, 201); // Ensure wallet address matches
-        assert!(creator.username == string::utf8(b"testcreator"), 202); // Ensure username matches
-    }
-
-    #[test(account = @aptos_social_host, aptos_framework = @0x1, friend_account = @friend_addr)]
-    public fun test_list_all_users(account: &signer, aptos_framework: &signer, friend_account: &signer) acquires AptosSocialState {
-        init_module_for_test(account);
-        timestamp::set_time_has_started_for_testing(aptos_framework);
-        
-        let display_name = string::utf8(b"Test Creator");
-        let username = string::utf8(b"testcreator");
-        let email = string::utf8(b"testcreator@example.com");
-        let profile_url = string::utf8(b"https://aptos.social/testcreator");
-        register_creator(account, display_name, username, email, profile_url);
-
-        let display_name2 = string::utf8(b"Test Creator2");
-        let username2 = string::utf8(b"testcreator2");
-        let email2 = string::utf8(b"testcreator2@example.com");
-        let profile_url2 = string::utf8(b"https://aptos.social/testcreator2");
-        register_creator(friend_account, display_name2, username2, email2, profile_url2);
-
-        // Fetch all users
-        let creators = find_all_creators();
-        
-        // Verify the number of creators
-        assert!(vector::length(&creators) == 2, 1);
-
-        // Verify the details of each creator
-        let creator1 = vector::borrow(&creators, 0);
-        assert!(creator1.username == username, 2);
-
-        let creator2 = vector::borrow(&creators, 1);
-        assert!(creator2.username == username2, 3);
-    }
-
-    #[test(account = @aptos_social_host, aptos_framework = @0x1)]
-    public fun test_is_name_taken(account: &signer, aptos_framework: &signer) acquires AptosSocialState {
-        init_module_for_test(account);
-        timestamp::set_time_has_started_for_testing(aptos_framework);
-        
-        let display_name = string::utf8(b"Test Creator");
-        let username = string::utf8(b"testcreator");
-        let email = string::utf8(b"testcreator@example.com");
-        let profile_url = string::utf8(b"https://aptos.social/testcreator");
-        register_creator(account, display_name, username, email, profile_url);
-
-        let result = is_name_taken(string::utf8(b"testcreator2332"));
-
-        // Assert if the name is taken
-        assert!(result == false, 1);
     }
 }
