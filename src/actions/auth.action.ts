@@ -1,10 +1,11 @@
-"use server";
+'use server';
 
-import { signIn } from "@/auth";
-import { AuthError } from "next-auth";
-import { AccountInfo } from "@aptos-labs/wallet-adapter-react";
-import { getApi, postApi } from "./api.action";
-import { IActionResponse } from "@/interfaces/response.interface";
+import { signIn, signOut } from '@/auth';
+import { AuthError } from 'next-auth';
+import { AccountInfo } from '@aptos-labs/wallet-adapter-react';
+import { getApi, postApi } from './api.action';
+import { IActionResponse } from '@/interfaces/response.interface';
+import { routes } from '@/routes';
 
 export async function getNonce(wallet: string): Promise<IActionResponse> {
   try {
@@ -13,22 +14,26 @@ export async function getNonce(wallet: string): Promise<IActionResponse> {
     if (response && response.nonce) {
       return {
         status: true,
-        message: "success",
+        message: 'success',
         data: { nonce: response.nonce },
       };
     }
-    return { status: false, message: "false" || response.error };
+    return { status: false, message: 'false' || response.error };
   } catch (error: any) {
     return { status: false, message: `${error.message}` };
   }
 }
 
-export async function authenticate(account: AccountInfo, nonce: string) {
+export async function authenticate(
+  account: AccountInfo,
+  nonce: string,
+) {
   try {
-    await signIn("credentials", {
+    await signIn('credentials', {
       address: account.address,
       publicKey: account.publicKey,
       nonce,
+      redirect: false,
     });
     // const data = response.data as AuthData;
     // if (data.ok) {
@@ -41,16 +46,20 @@ export async function authenticate(account: AccountInfo, nonce: string) {
     //   });
     //   return { status: true, message: "success", data };
     // }
-    return { status: false, message: "false" };
+    return { status: false, message: 'false' };
   } catch (error: any) {
     if (error instanceof AuthError) {
       switch (error.type) {
-        case "CredentialsSignin":
-          return "Invalid credentials.";
+        case 'CredentialsSignin':
+          return 'Invalid credentials.';
         default:
-          return "Something went wrong.";
+          return 'Something went wrong.';
       }
     }
     return { status: false, message: `${error.message}` };
   }
+}
+
+export async function initSignOut() {
+  await signOut({ redirect: true, redirectTo: routes.login });
 }

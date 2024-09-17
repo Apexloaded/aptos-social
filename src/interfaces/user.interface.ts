@@ -3,10 +3,14 @@ export interface UserInterface {
   name?: string;
   username?: string;
   wallet?: string;
+  email?: string;
+  friends?: string[];
+  is_verified?: boolean;
   bio?: string;
   banner?: string;
   pfp?: string;
-  updatedAt?: string;
-  createdAt?: string;
+  profile_uri?: string;
+  updated_at?: string;
+  created_at?: string;
   website?: string;
 }

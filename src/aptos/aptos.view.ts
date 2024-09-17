@@ -1,5 +1,10 @@
 import { aptosClient } from '@/utils/aptosClient';
-import { is_name_take } from './aptos.function';
+import {
+  find_creator,
+  find_creator_by_name,
+  is_name_take,
+} from './aptos.function';
+import { UserInterface } from '@/interfaces/user.interface';
 
 export const isNameTaken = async (username: string): Promise<boolean> => {
   const response = await aptosClient().view<[[{ inner: string }]]>({
@@ -9,4 +14,26 @@ export const isNameTaken = async (username: string): Promise<boolean> => {
     },
   });
   return response[0] as unknown as boolean;
+};
+
+export const getUserProfile = async (
+  address: string
+): Promise<UserInterface> => {
+  const response = await aptosClient().view<[[{ inner: string }]]>({
+    payload: {
+      function: find_creator,
+      functionArguments: [address],
+    },
+  });
+  return response[0] as unknown as UserInterface;
+};
+
+export const getUserByName = async (name: string): Promise<UserInterface> => {
+  const response = await aptosClient().view<[[{ inner: string }]]>({
+    payload: {
+      function: find_creator_by_name,
+      functionArguments: [name],
+    },
+  });
+  return response[0] as unknown as UserInterface;
 };

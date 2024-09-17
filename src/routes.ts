@@ -1,43 +1,52 @@
-export const fullScreenPath = ["/live/video"];
-export const protectedRoutes = ["/feeds", "/welcome", "/*/mints"];
-export const publicRoutes = ["/"];
+export const fullScreenPath = ['/live/video'];
+export const protectedRoutes = [
+  '/feeds',
+  '/welcome',
+  '/**/mints',
+  '/collections',
+];
+export const publicRoutes = ['/', '/support'];
+
 export const routes = {
-  home: "/",
-  login: "/login",
+  home: '/',
+  login: '/login',
   app: {
-    home: "/feeds",
-    explore: "/explore",
+    home: '/feeds',
+    explore: '/explore',
     messages: {
-      index: "/messages",
+      index: '/messages',
       message: (address: string) => `/messages/view?u=${address}`,
     },
-    bookmarks: "/bookmarks",
+    collections: {
+      index: '/collections'
+    },
+    bookmarks: '/bookmarks',
     live: {
-      index: "/live",
-      desktop: "/live/streams/video",
-      webcam: "/live/streams/webcam",
-      event: "/live/streams/event",
-      credential: "/live/streams/key",
+      index: '/live',
+      desktop: '/live/streams/video',
+      webcam: '/live/streams/webcam',
+      event: '/live/streams/event',
+      credential: '/live/streams/key',
     },
     watch: (id: string) => `/watch?v=${id}`,
-    connections: "/connections",
+    connections: '/connections',
     wallet: {
-      index: "/wallet",
-      deposit: "/wallet/deposit",
-      withdraw: "/wallet/withdraw",
+      index: '/wallet',
+      deposit: '/wallet/deposit',
+      withdraw: '/wallet/withdraw',
     },
-    profile: (username: string) => `/profile?u=${username}`,
+    profile: (username: string) => `/${username}`,
     mints: (username: string, postId: string) => `/${username}/mints/${postId}`,
     hashtag: {
-      index: "/hashtag",
+      index: '/hashtag',
       hashtag: (hashtag: string) => `/hashtag/${hashtag}`,
     },
     search: (query: string) => `/search?q=${query}`,
     transaction: {
-      index: "/transactions",
+      index: '/transactions',
       id: (id: string) => `/transactions/${id}`,
     },
-    community: "/community",
-    settings: "/settings",
+    community: '/community',
+    settings: '/settings',
   },
 };

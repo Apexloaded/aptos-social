@@ -20,8 +20,13 @@ import { Label } from '../ui/label';
 import FileSelector from '../ui/fileselector';
 import MediaPreview from '../Posts/MediaPreview';
 import { isNameTaken } from '@/aptos/aptos.view';
+import { checkIfFund, uploadFile } from '@/utils/Irys';
+import { registerCreator } from '@/aptos/entry-functions/register-creator';
+import { aptosClient } from '@/utils/aptosClient';
+import { routes } from '@/routes';
 
 function Welcome() {
+  const aptosWallet = useWallet();
   const mediaRef = useRef<HTMLInputElement>(null);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const router = useRouter();
@@ -34,9 +39,9 @@ function Welcome() {
     formState: { errors, isSubmitting, isValid },
   } = useForm(welcomeResolver);
   const username = watch('username');
-  const { connected } = useWallet();
+  const { account, wallet, signAndSubmitTransaction } = useWallet();
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
-  const { error, success, loading } = useToast();
+  const { error, success, loading, updateLoading } = useToast();
 
   const checkUsername = useCallback(
     debounce(async (username) => {
@@ -62,10 +67,42 @@ function Welcome() {
 
   const proceed = async (data: FieldValues) => {
     try {
+      if (!mediaFile) return;
       loading({ msg: 'Processing...' });
+
+      const funded = await checkIfFund(aptosWallet, mediaFile.size);
+      if (!funded)
+        throw new Error(
+          'Current account balance is not enough to fund a decentralized asset node'
+        );
+
+      updateLoading({ msg: 'Uploading profile image...' });
+      const pfpUrl = await uploadFile(aptosWallet, mediaFile);
+
+      updateLoading({ msg: 'Creating profile...' });
+      const response = await signAndSubmitTransaction(
+        registerCreator({
+          name: data.name,
+          email: data.email,
+          username: data.username,
+          pfp: pfpUrl,
+        })
+      );
+
+      // Wait for the transaction to be commited to chain
+      const committedTransactionResponse =
+        await aptosClient().waitForTransaction({
+          transactionHash: response.hash,
+        });
+
+      // Once the transaction has been successfully commited to chain, navigate to the `my-assets` page
+      if (committedTransactionResponse.success) {
+        success({ msg: 'Profile was successfully created' });
+        router.push(routes.app.home);
+      }
     } catch (err: any) {
       // const msg = getError(err);
-      // error({ msg: `${msg}` });
+      error({ msg: `Error creating profile` });
     }
   };
 
@@ -111,8 +148,8 @@ function Welcome() {
       <div className="text-center mb-4">
         <p className="text-xl font-bold">Setup your account</p>
         <p className="text-dark/60 text-base">
-          Fill in the following information to configure and mint your Aptos.Social onchain
-          profile.
+          Fill in the following information to configure and mint your
+          Aptos.Social onchain profile.
         </p>
       </div>
       <div className="flex flex-col w-full border border-medium/30 gap-4 bg-white rounded-xl p-5">

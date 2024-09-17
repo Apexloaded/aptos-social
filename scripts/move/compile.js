@@ -7,35 +7,35 @@ const aptosSDK = require('@aptos-labs/ts-sdk')
 const config = yaml.load(fs.readFileSync('./.aptos/config.yaml', 'utf8'))
 const accountAddress =
     config['profiles'][
-        `${process.env.PROJECT_NAME}-${process.env.NEXT_PUBLIC_APP_NETWORK}`
+        `${process.env.PROJECT_NAME}-${process.env.APP_NETWORK}`
     ]['account']
 
 async function compile() {
     const aptosConfig = new aptosSDK.AptosConfig({
-        network: process.env.NEXT_PUBLIC_APP_NETWORK,
+        network: process.env.APP_NETWORK,
     })
     const aptos = new aptosSDK.Aptos(aptosConfig)
 
-    // Make sure NEXT_PUBLIC_ADMIN_ADDR is set
-    if (!process.env.NEXT_PUBLIC_ADMIN_ADDR) {
+    // Make sure ADMIN_ADDR is set
+    if (!process.env.ADMIN_ADDR) {
         throw new Error(
-            'Please set the NEXT_PUBLIC_ADMIN_ADDR in the .env file'
+            'Please set the ADMIN_ADDR in the .env file'
         )
     }
 
-    // Make sure NEXT_PUBLIC_ADMIN_ADDR exists
+    // Make sure ADMIN_ADDR exists
     try {
         await aptos.getAccountInfo({
-            accountAddress: process.env.NEXT_PUBLIC_ADMIN_ADDR,
+            accountAddress: process.env.ADMIN_ADDR,
         })
     } catch (error) {
         throw new Error(
-            'Account does not exist. Make sure you have set up the correct address as the NEXT_PUBLIC_ADMIN_ADDR in the .env file'
+            'Account does not exist. Make sure you have set up the correct address as the ADMIN_ADDR in the .env file'
         )
     }
 
     let tokenMinterContractAddress
-    switch (process.env.NEXT_PUBLIC_APP_NETWORK) {
+    switch (process.env.APP_NETWORK) {
         case 'testnet':
             tokenMinterContractAddress =
                 '0x3c41ff6b5845e0094e19888cba63773591be9de59cafa9e582386f6af15dd490'
@@ -46,7 +46,7 @@ async function compile() {
             break
         default:
             throw new Error(
-                `Invalid network used. Make sure process.env.NEXT_PUBLIC_APP_NETWORK is either mainnet or testnet`
+                `Invalid network used. Make sure process.env.APP_NETWORK is either mainnet or testnet`
             )
     }
     const move = new cli.Move()
@@ -54,7 +54,6 @@ async function compile() {
     await move.compile({
         packageDirectoryPath: 'contract',
         namedAddresses: {
-            // Publish module to account address
             aptos_social_host: accountAddress,
             minter: tokenMinterContractAddress,
             friend_addr:

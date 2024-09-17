@@ -7,6 +7,7 @@ import { HelperProvider } from "@/providers/HelperProvider";
 import { AptosWalletProvider } from "@/providers/AptosProvider";
 import { ThemeProvider } from "@/context/theme.context";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AptosSocialProviders } from "@/providers/AptosSocialProviders";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -37,12 +38,14 @@ export default function RootLayout({
         <ReduxProvider>
           <AptosWalletProvider>
             <ReactQueryProvider>
-              <ThemeProvider>
-                <TooltipProvider delayDuration={100}>
-                  {children}
-                  <HelperProvider />
-                </TooltipProvider>
-              </ThemeProvider>
+              <AptosSocialProviders>
+                <ThemeProvider>
+                  <TooltipProvider delayDuration={100}>
+                    {children}
+                    <HelperProvider />
+                  </TooltipProvider>
+                </ThemeProvider>
+              </AptosSocialProviders>
             </ReactQueryProvider>
           </AptosWalletProvider>
         </ReduxProvider>

@@ -74,10 +74,10 @@ module aptos_social_host::aptos_social_profile {
     // Register a new creator
     public entry fun register_creator(
         creator: &signer,
-        display_name: String,
+        name: String,
         username: String,
-        email_address: String,
-        profile_url: String
+        email: String,
+        pfp: String
     ) acquires AptosSocialProfileState {
         let creator_address = signer::address_of(creator);
         let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social_host);
@@ -85,18 +85,18 @@ module aptos_social_host::aptos_social_profile {
         
         assert!(!table::contains(&state.creators, creator_address), ERROR_DUPLICATE_RESOURCE); // ERROR_DUPLICATE_RESOURCE
         assert!(!table::contains(&state.usernames, lowercase_username), ERROR_DUPLICATE_RESOURCE); // ERROR_DUPLICATE_RESOURCE
-        assert!(string::length(&display_name) > 0 && string::length(&username) > 0 && string::length(&profile_url) > 0, ERROR_INVALID_STRING); // ERROR_INVALID_STRING
+        assert!(string::length(&name) > 0 && string::length(&username) > 0 && string::length(&pfp) > 0, ERROR_INVALID_STRING); // ERROR_INVALID_STRING
 
         let new_creator = Creator {
-            name: display_name,
+            name: name,
             username: lowercase_username,
             wallet: creator_address,
-            email: email_address,
-            pfp: string::utf8(b""),
+            email: email,
+            pfp: pfp,
             banner: string::utf8(b""),
             bio: string::utf8(b""),
             website: string::utf8(b""),
-            profile_uri: profile_url,
+            profile_uri: string::utf8(b""),
             created_at: timestamp::now_seconds(),
             updated_at: timestamp::now_seconds(),
             friends: vector::empty(),
@@ -111,7 +111,7 @@ module aptos_social_host::aptos_social_profile {
         // Emit event
         event::emit(NewCreatorEvent {
             creator: creator_address,
-            display_name,
+            display_name: name,
             username: lowercase_username,
         });
     }

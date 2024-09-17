@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   AtomIcon,
@@ -7,6 +7,8 @@ import {
   BookmarkIcon,
   BoxIcon,
   CandlestickChart,
+  ChevronDownIcon,
+  DatabaseIcon,
   DotIcon,
   EllipsisIcon,
   HomeIcon,
@@ -18,71 +20,78 @@ import {
   Users2Icon,
   UsersIcon,
   Wallet2Icon,
-} from "lucide-react";
-import React, { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { Icon } from "../Icons/Icons";
-import { routes } from "@/routes";
-import clsx from "clsx";
-import { useMediaQuery } from "@/hooks/media-query.hook";
-import { Button } from "../ui/button";
-import { ToggleTheme } from "../ToggleTheme";
-import { MintPost } from "../Posts/MintPost";
+} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
+import { Icon } from '../Icons/Icons';
+import { routes } from '@/routes';
+import clsx from 'clsx';
+import { useMediaQuery } from '@/hooks/media-query.hook';
+import { Button } from '../ui/button';
+
+import { MintPost } from '../Posts/MintPost';
+import { useQuery } from '@tanstack/react-query';
+import { getUserProfile } from '@/aptos/aptos.view';
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { useAuth } from '@/context/auth.context';
+import { ISectionedMenu } from '@/interfaces/menu.interface';
+import { MenuItems } from './MenuItems';
+import QuickProfile from './QuickProfile';
 
 export default function Sidebar() {
-  const isLg = useMediaQuery("(max-width: 1024px)");
+  const isLg = useMediaQuery('(max-width: 1024px)');
   const path = usePathname();
-  const [mintModal, setMintModal] = useState<boolean>(false);
+  const { user, logout } = useAuth();
 
-  const sectionedNavigation = [
+  const sectionedNavigation: ISectionedMenu[] = [
     {
-      title: "Home",
+      title: 'Home',
       menu: [
-        { name: "Feeds", href: routes.home, icon: AtomIcon },
+        { name: 'Feeds', href: routes.app.home, icon: AtomIcon },
         {
-          name: "Explore",
+          name: 'Explore',
           href: routes.app.explore,
           icon: BoxIcon,
         },
         {
-          name: "Bookmarks",
-          href: routes.app.bookmarks,
-          icon: BookmarkIcon,
+          name: 'Collections',
+          href: routes.app.collections.index,
+          icon: DatabaseIcon,
         },
       ],
     },
     {
-      title: "Chats",
+      title: 'Chats',
       menu: [
         {
-          name: "Connections",
+          name: 'Connections',
           href: routes.app.connections,
           icon: Users2Icon,
         },
         {
-          name: "Messages",
+          name: 'Messages',
           href: routes.app.messages.index,
           icon: MailIcon,
         },
       ],
     },
     {
-      title: "Chats",
+      title: 'Chats',
       menu: [
         {
-          name: "Wallet",
+          name: 'Wallet',
           href: routes.app.wallet.index,
           icon: Wallet2Icon,
         },
         {
-          name: "Settings",
+          name: 'Settings',
           href: routes.app.settings,
           icon: SettingsIcon,
         },
         {
-          name: "Community",
+          name: 'Community',
           href: routes.app.community,
           icon: UsersIcon,
         },
@@ -91,14 +100,14 @@ export default function Sidebar() {
   ];
 
   const navigation = [
-    { name: "Feeds", href: routes.home, icon: AtomIcon },
+    { name: 'Feeds', href: routes.home, icon: AtomIcon },
     {
-      name: "Explore",
+      name: 'Explore',
       href: routes.app.explore,
       icon: BoxIcon,
     },
     {
-      name: "Messages",
+      name: 'Messages',
       href: routes.app.messages.index,
       icon: MailIcon,
     },
@@ -108,12 +117,12 @@ export default function Sidebar() {
     //   icon: BellDotIcon,
     // },
     {
-      name: "Bookmarks",
+      name: 'Bookmarks',
       href: routes.app.bookmarks,
       icon: BookmarkIcon,
     },
     {
-      name: "Connections",
+      name: 'Connections',
       href: routes.app.connections,
       icon: Users2Icon,
     },
@@ -129,17 +138,17 @@ export default function Sidebar() {
     // },
 
     {
-      name: "Community",
+      name: 'Community',
       href: routes.app.community,
       icon: UsersIcon,
     },
     {
-      name: "Settings",
+      name: 'Settings',
       href: routes.app.settings,
       icon: SettingsIcon,
     },
     {
-      name: "Wallet",
+      name: 'Wallet',
       href: routes.app.wallet.index,
       icon: Wallet2Icon,
     },
@@ -164,7 +173,7 @@ export default function Sidebar() {
             >
               <Icon />
               <p
-                className={clsx("text-lg font-black text-primary", {
+                className={clsx('text-lg font-black text-primary', {
                   hidden: isLg,
                 })}
               >
@@ -172,54 +181,15 @@ export default function Sidebar() {
               </p>
             </Link>
           </div>
-          <div className="pt-3 pb-8 px-3 flex items-center justify-between pr-5">
-            <p className="text-dark dark:text-white">Text</p>
-            <ToggleTheme />
+          <div
+            role="button"
+            className="pt-3 pb-8 px-3 group flex items-center justify-between pr-5"
+          >
+            <QuickProfile />
           </div>
           <div>
             {sectionedNavigation.map((section, idx) => (
-              <>
-                {section.menu.map((nav, id) => (
-                  <Link
-                    prefetch={true}
-                    href={nav.href}
-                    key={idx}
-                    className="flex justify-end xl:justify-start group"
-                  >
-                    <div
-                      className={`flex lg:flex-1 items-center justify-between ${
-                        isActive(nav.href)
-                          ? "bg-primary/10 border-r-4 border-primary"
-                          : ""
-                      } transition-all duration-200 px-[0.8rem] py-[0.6rem]`}
-                    >
-                      <div className="flex items-center space-x-5">
-                        <nav.icon
-                          className={`group-hover:text-primary ${
-                            isActive(nav.href)
-                              ? "text-primary"
-                              : "text-dark dark:text-white"
-                          }`}
-                          size={23}
-                        />
-                        <p
-                          className={`hidden lg:inline group-hover:text-primary text-base ${
-                            isActive(nav.href)
-                              ? "text-primary font-bold"
-                              : "text-dark dark:text-white"
-                          }`}
-                        >
-                          {nav.name}
-                        </p>
-                      </div>
-                      {isActive(nav.href) && (
-                        <DotIcon className="float-right hidden lg:inline text-primary" />
-                      )}
-                    </div>
-                  </Link>
-                ))}
-                <div className="mb-5 last-of-type:mb-0"></div>
-              </>
+              <MenuItems key={idx} menu={section.menu} isActive={isActive} />
             ))}
           </div>
         </div>

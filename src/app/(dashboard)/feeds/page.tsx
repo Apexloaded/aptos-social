@@ -9,7 +9,7 @@ export default function Feeds() {
     <Container>
       <div className="flex space-x-5">
         <Section className="bg-muted dark:bg-dark-light px-5">
-          <div className="max-w-md bg-muted/80 backdrop-blur-2xl dark:bg-dark-light/80 mx-auto w-full sticky top-0 z-10">
+          <div className="bg-muted/80 backdrop-blur-2xl dark:bg-dark-light/80 mx-auto w-full sticky top-0 z-10">
             <Header title="Feeds" isBack={false} />
           </div>
           <Posts />

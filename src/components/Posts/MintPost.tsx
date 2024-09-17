@@ -83,19 +83,19 @@ export function MintPost() {
         className="relative z-10 focus:outline-none"
         onClose={close}
       >
-        <div className="fixed bg-dark/50 backdrop-blur-sm inset-0 z-10 w-screen overflow-y-auto">
+        <div className="fixed bg-dark/50 dark:bg-white/10 backdrop-blur-sm inset-0 z-10 w-screen overflow-y-auto">
           <div className="flex min-h-full items-start justify-center p-4">
             <DialogPanel
               transition
               className="w-full max-w-xl rounded-xl bg-white dark:bg-dark px-5 pb-5 pt-2 duration-300 ease-out data-[closed]:transform-[scale(95%)] data-[closed]:opacity-0"
             >
               <DialogTitle as="h3" className="text-base/7 font-medium">
-                <Button onClick={close} size="icon" variant={"ghost"}>
+                <Button onClick={close} size="icon" variant={'ghost'}>
                   <XIcon size={18} />
                 </Button>
               </DialogTitle>
               <div className="mt-2 flex items-start space-x-3">
-                <CreatorPFP username={"elonmusk"} name={"Elon Musk"} />
+                <CreatorPFP username={'elonmusk'} name={'Elon Musk'} />
                 <div className="flex-1 flex flex-col relative">
                   <Controller
                     control={control}
@@ -113,7 +113,7 @@ export function MintPost() {
                         )}
                       </>
                     )}
-                    name={"content"}
+                    name={'content'}
                   />
                 </div>
               </div>
@@ -128,7 +128,7 @@ export function MintPost() {
                             if (ev.target.files) {
                               const file = ev.target.files[0];
                               setMediaFile(file);
-                              setValue("images", file);
+                              setValue('images', file);
                               onChange(file);
                             }
                           }}
@@ -137,7 +137,7 @@ export function MintPost() {
                         />
                         <Button
                           size="icon"
-                          variant={"ghost"}
+                          variant={'ghost'}
                           onClick={toggleMedia}
                           title="Image"
                         >
@@ -145,19 +145,19 @@ export function MintPost() {
                         </Button>
                       </>
                     )}
-                    name={"images"}
+                    name={'images'}
                   />
 
-                  <Button size="icon" variant={"ghost"} title="GIF">
+                  <Button size="icon" variant={'ghost'} title="GIF">
                     <GifIcon height={18} />
                   </Button>
-                  <Button size="icon" variant={"ghost"} title="Emoji">
+                  <Button size="icon" variant={'ghost'} title="Emoji">
                     <SmilePlusIcon size={18} />
                   </Button>
-                  <Button size="icon" variant={"ghost"} title="Pool">
+                  <Button size="icon" variant={'ghost'} title="Pool">
                     <ShieldQuestionIcon size={18} />
                   </Button>
-                  <Button size="icon" variant={"ghost"} title="Schedule">
+                  <Button size="icon" variant={'ghost'} title="Schedule">
                     <CalendarPlusIcon size={18} />
                   </Button>
                 </div>
@@ -171,12 +171,12 @@ export function MintPost() {
 
                   <Button
                     onClick={handleSubmit(onSubmit)}
-                    type={"submit"}
+                    type={'submit'}
                     disabled={!isValid || isEmptyContent || isSubmitting}
-                    size={"default"}
+                    size={'default'}
                     className="rounded-full"
                   >
-                    <p className="text-sm font-semibold">{"Mint"}</p>
+                    <p className="text-sm font-semibold">{'Mint'}</p>
                   </Button>
                 </div>
               </div>

@@ -2,21 +2,21 @@ import { InputTransactionData } from '@aptos-labs/wallet-adapter-react';
 import { register_creator } from '../aptos.function';
 
 export type RegisterCreatorType = {
-  display_name: string;
+  name: string;
   username: string;
-  email_address: string;
-  profile_url: string;
+  email: string;
+  pfp: string;
 };
 
 export const registerCreator = (
   args: RegisterCreatorType
 ): InputTransactionData => {
-  const { display_name, username, email_address, profile_url } = args;
+  const { name, username, email, pfp } = args;
   return {
     data: {
       function: register_creator,
       typeArguments: [],
-      functionArguments: [display_name, username, email_address, profile_url],
+      functionArguments: [name, username, email, pfp],
     },
   };
 };

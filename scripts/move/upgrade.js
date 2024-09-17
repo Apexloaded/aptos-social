@@ -1,49 +1,63 @@
-require("dotenv").config();
-const cli = require("@aptos-labs/ts-sdk/dist/common/cli/index.js");
-const aptosSDK = require("@aptos-labs/ts-sdk")
+require('dotenv').config();
+const cli = require('@aptos-labs/ts-sdk/dist/common/cli/index.js');
+const aptosSDK = require('@aptos-labs/ts-sdk');
 
 async function publish() {
+  const aptosConfig = new aptosSDK.AptosConfig({
+    network: process.env.APP_NETWORK,
+  });
+  const aptos = new aptosSDK.Aptos(aptosConfig);
 
-  const aptosConfig = new aptosSDK.AptosConfig({network:process.env.NEXT_PUBLIC_APP_NETWORK})
-  const aptos = new aptosSDK.Aptos(aptosConfig)
-
-  // Make sure NEXT_PUBLIC_ADMIN_ADDR is set
-  if (!process.env.NEXT_PUBLIC_ADMIN_ADDR) {
-    throw new Error("Please set the NEXT_PUBLIC_ADMIN_ADDR in the .env file");
+  // Make sure ADMIN_ADDR is set
+  if (!process.env.ADMIN_ADDR) {
+    throw new Error('Please set the ADMIN_ADDR in the .env file');
   }
 
-  // Make sure NEXT_PUBLIC_ADMIN_ADDR exists
+  // Make sure ADMIN_ADDR exists
   try {
-    await aptos.getAccountInfo({ accountAddress: process.env.NEXT_PUBLIC_ADMIN_ADDR });
+    await aptos.getAccountInfo({
+      accountAddress: process.env.ADMIN_ADDR,
+    });
   } catch (error) {
     throw new Error(
-      "Account does not exist. Make sure you have set up the correct address as the NEXT_PUBLIC_ADMIN_ADDR in the .env file",
+      'Account does not exist. Make sure you have set up the correct address as the ADMIN_ADDR in the .env file'
     );
   }
 
-  // Check NEXT_PUBLIC_MODULE_ADDRESS is set
-  if (!process.env.NEXT_PUBLIC_MODULE_ADDRESS) {
+  // Check MODULE_ADDRESS is set
+  if (!process.env.MODULE_ADDRESS) {
     throw new Error(
-      "NEXT_PUBLIC_MODULE_ADDRESS variable is not set, make sure you have published the module before upgrading it",
+      'MODULE_ADDRESS variable is not set, make sure you have published the module before upgrading it'
     );
   }
 
+  let tokenMinterContractAddress;
+  switch (process.env.APP_NETWORK) {
+    case 'testnet':
+      tokenMinterContractAddress =
+        '0x3c41ff6b5845e0094e19888cba63773591be9de59cafa9e582386f6af15dd490';
+      break;
+    case 'mainnet':
+      tokenMinterContractAddress =
+        '0x5ca749c835f44a9a9ff3fb0bec1f8e4f25ee09b424f62058c561ca41ec6bb146';
+      break;
+    default:
+      throw new Error(
+        `Invalid network used. Make sure process.env.APP_NETWORK is either mainnet or testnet`
+      );
+  }
   const move = new cli.Move();
 
   move.upgradeObjectPackage({
-    packageDirectoryPath: "contract",
-    objectAddress: process.env.NEXT_PUBLIC_MODULE_ADDRESS,
+    packageDirectoryPath: 'contract',
+    objectAddress: process.env.MODULE_ADDRESS,
     namedAddresses: {
-      // Upgrade module from an object
-      launchpad_addr: process.env.NEXT_PUBLIC_MODULE_ADDRESS,
-      // This is the address you want to use to create fungible asset with, e.g. an address in Petra so you can create fungible asset in UI using Petra
-      initial_creator_addr: process.env.NEXT_PUBLIC_ADMIN_ADDR,
-      // Our contract depends on the token-minter contract to provide some common functionalities like managing refs and mint stages
-      // You can read the source code of it here: https://github.com/aptos-labs/token-minter/
-      // Please find it on the network you are using, This is testnet deployment
-      minter: "0x3c41ff6b5845e0094e19888cba63773591be9de59cafa9e582386f6af15dd490",
+      aptos_social_host: process.env.MODULE_ADDRESS,
+      minter: tokenMinterContractAddress,
+      friend_addr:
+        '99cabef4f4daa7af133cc7c6ed737d9c0ef0858d79f92e3a1080bd13a0e7b2f2',
     },
-      profile: `${process.env.PROJECT_NAME}-${process.env.NEXT_PUBLIC_APP_NETWORK}`,
+    profile: `${process.env.PROJECT_NAME}-${process.env.APP_NETWORK}`,
   });
 }
 publish();
