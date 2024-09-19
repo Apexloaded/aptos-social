@@ -4,6 +4,7 @@ export const protectedRoutes = [
   '/welcome',
   '/**/mints',
   '/collections',
+  '/collections/create'
 ];
 export const publicRoutes = ['/', '/support'];
 
@@ -18,7 +19,10 @@ export const routes = {
       message: (address: string) => `/messages/view?u=${address}`,
     },
     collections: {
-      index: '/collections'
+      index: '/collections',
+      create: '/collections/create',
+      view: (id: string) => `/collections/${id}`,
+      edit: (id: string) => `/collections/${id}/edit`,
     },
     bookmarks: '/bookmarks',
     live: {

@@ -34,9 +34,13 @@ module aptos_social_host::feeds_test {
         let description = string::utf8(b"This is the official Aptos Social Collection");
         let uri = string::utf8(b"ipfs://some_metadata");
         let max_supply = 10000;
+        let custom_id = string::utf8(b"james-d");
         let royalty_percentage = option::some(10);
+        let logo = option::none();
+        let banner = option::none();
+        let featured = option::none();
 
-        aptos_social_feeds::create_collection(account, name, description, uri, max_supply, royalty_percentage);
+        aptos_social_feeds::create_collection(account, name, description, max_supply, custom_id, royalty_percentage, logo, banner, featured);
 
         let result = aptos_social_feeds::get_global_collections();
         let collection_1 = *vector::borrow(&result, vector::length(&result) - 1);
@@ -78,6 +82,8 @@ module aptos_social_host::feeds_test {
 
         let result = aptos_social_feeds::get_global_collections();
         let collection_1 = *vector::borrow(&result, vector::length(&result) - 1);
+
+        // debug::pring<Object<Collection>>(collection_1);
         
         let creator_address = signer::address_of(account);
         debug::print<address>(&creator_address);
@@ -90,6 +96,8 @@ module aptos_social_host::feeds_test {
         // debug::print<signer>(owner_obj_signer);
         // debug::print<bool>(&owner);
         // profile_test::test_register_creator(account, aptos_framework);
+
+        // let collection_address = object::object_address(collection_1);
 
         aptos_social_feeds::mint_post(account, content, price, media_urls, media_mimetypes, metadata_uri, collection_1);
     }

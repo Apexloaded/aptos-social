@@ -14,7 +14,7 @@ module aptos_social_host::aptos_social_feeds {
     use aptos_framework::object::{Self, Object, ObjectCore, ExtendRef};
     use aptos_framework::timestamp;
 
-    use aptos_token_objects::collection::{Self, Collection};
+    use aptos_token_objects::collection::{Self, Collection, MutatorRef};
     use aptos_token_objects::royalty::{Self, Royalty};
     use aptos_token_objects::token::{Self, Token};
 
@@ -24,8 +24,6 @@ module aptos_social_host::aptos_social_feeds {
 
     use aptos_social_host::aptos_social_utils;
     use aptos_social_host::aptos_social_profile;
-    // friend aptos_social_utils;
-    // friend aptos_soical_profile;
 
     // Error codes
     const ERROR_INVALID_STRING: u64 = 0;
@@ -80,9 +78,21 @@ module aptos_social_host::aptos_social_feeds {
         token_address: address,
     }
 
+    struct UserCollectionMetadata has key {
+        created_at: u64,
+        logo_img: Option<String>,
+        banner_img: Option<String>,
+        featured_img: Option<String>,
+        custom_id: String,
+        website: String,
+        collection_address: address
+    }
+
     struct CollectionAccessConfig has key {
         collection: Object<Collection>,
         extend_ref: object::ExtendRef,
+        transfer_ref: object::TransferRef,
+        mutator_ref: MutatorRef,
         creator: address,
     }
 
@@ -105,7 +115,8 @@ module aptos_social_host::aptos_social_feeds {
         post_comments: vector<vector<u64>>,
         admin_addr: address,
         pending_admin_addr: Option<address>,
-        collections: vector<Object<Collection>>
+        collections: vector<Object<Collection>>,
+        custom_collection_name: Table<String, Object<Collection>>,
     }
 
     #[event]
@@ -156,6 +167,7 @@ module aptos_social_host::aptos_social_feeds {
             admin_addr: signer::address_of(account),
             pending_admin_addr: option::none(),
             collections: vector::empty(),
+            custom_collection_name: table::new()
         };
 
         move_to(account, state);
@@ -165,17 +177,26 @@ module aptos_social_host::aptos_social_feeds {
         account: &signer,
         name: String,
         description: String,
-        uri: String,
         max_supply: u64,
+        custom_id: String,
         royalty_percentage: Option<u64>,
+        logo_img: Option<String>,
+        banner_img: Option<String>,
+        featured_img: Option<String>,
     ) acquires AptosSocialFeedState, UserCollections {
         let creator_address = signer::address_of(account);
         assert!(aptos_social_profile::profile_exists(creator_address), ERROR_UNAUTHORISED_ACCESS);
-
+        
+        let id = aptos_social_utils::to_lowercase(&custom_id);
         let royalty = royalty(&mut royalty_percentage, creator_address);
 
         let owner_constructor_ref = &object::create_object(creator_address);
         let owner_obj_signer = &object::generate_signer(owner_constructor_ref);
+
+        let collections = get_global_collections();
+        let collection_id = vector::length(&collections) + 1;
+        let uri = string::utf8(b"https://aptos.social/collections/");
+        string::append(&mut uri, id);
 
         let collection_constructor_ref = 
             &collection::create_fixed_collection(
@@ -199,11 +220,13 @@ module aptos_social_host::aptos_social_feeds {
 
         move_to(owner_obj_signer, CollectionAccessConfig {
             extend_ref: object::generate_extend_ref(owner_constructor_ref),
+            transfer_ref: object::generate_transfer_ref(collection_constructor_ref),
+            mutator_ref: collection::generate_mutator_ref(collection_constructor_ref),
             collection: collection_obj,
             creator: creator_address
         });
-        let collection_owner_obj = object::object_from_constructor_ref(owner_constructor_ref);
 
+        let collection_owner_obj = object::object_from_constructor_ref(owner_constructor_ref);
         move_to(collection_obj_signer, CollectionConfig {
             mint_fee_per_nft_by_stages: simple_map::new(),
             mint_enabled: true,
@@ -213,6 +236,16 @@ module aptos_social_host::aptos_social_feeds {
 
         let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
         vector::push_back(&mut state.collections, collection_obj);
+        table::add(&mut state.custom_collection_name, id, collection_obj);
+        store_nft_metadata(
+            collection_obj_signer,
+            uri,
+            id,
+            logo_img,
+            banner_img,
+            featured_img,
+            object::object_address(&collection_obj)
+        );
 
         event::emit(CollectionCreatedEvent {
             creator_addr: creator_address,
@@ -290,7 +323,7 @@ module aptos_social_host::aptos_social_feeds {
         let amount = 1;
         let nft_objs = vector[];
         for (i in 0..amount) {
-            let nft_obj = mint_nft_internal(creator_address, collection_obj);
+            let nft_obj = mint_nft_internal(creator_address, collection_obj, string::utf8(metadata_uri));
             vector::push_back(&mut nft_objs, nft_obj);
         };
 
@@ -302,10 +335,46 @@ module aptos_social_host::aptos_social_feeds {
         });
     }
 
+    inline fun store_nft_metadata(
+        col_obj_signer: &signer,
+        uri: String,
+        custom_id: String,
+        logo_img: Option<String>,
+        banner_img: Option<String>,
+        featured_img: Option<String>,
+        collection_address: address
+    ) acquires UserCollectionMetadata {
+        let logo = option::none<String>();
+        if(option::is_some(&logo_img)) {
+            logo = logo_img;
+        };
+
+        let banner = option::none<String>();
+        if(option::is_some(&banner_img)) {
+            banner = banner_img;
+        };
+
+        let featured = option::none<String>();
+        if(option::is_some(&featured_img)) {
+            featured = featured_img;
+        };
+
+        move_to(col_obj_signer, UserCollectionMetadata {
+            created_at: timestamp::now_seconds(),
+            logo_img: logo,
+            custom_id,
+            banner_img: banner,
+            featured_img: featured,
+            website: uri,
+            collection_address
+        });
+    }
+
     /// Actual implementation of minting NFT
     fun mint_nft_internal(
         creator_address: address,
         collection_obj: Object<Collection>,
+        metadata_uri: String,
     ): Object<Token> acquires CollectionConfig, CollectionAccessConfig {
         let collection_config = borrow_global<CollectionConfig>(object::object_address(&collection_obj));
 
@@ -317,39 +386,19 @@ module aptos_social_host::aptos_social_feeds {
 
         let next_nft_id = *option::borrow(&collection::count(collection_obj)) + 1;
 
-        let collection_uri = collection::uri(collection_obj);
-        let nft_metadata_uri = construct_nft_metadata_uri(&collection_uri, next_nft_id);
-
         let nft_obj_constructor_ref = &token::create(
             collection_owner_obj_signer,
             collection::name(collection_obj),
             string_utils::to_string(&next_nft_id),
             string_utils::to_string(&next_nft_id),
             royalty::get(collection_obj),
-            nft_metadata_uri,
+            metadata_uri,
         );
         token_components::create_refs(nft_obj_constructor_ref);
         let nft_obj = object::object_from_constructor_ref(nft_obj_constructor_ref);
         object::transfer(collection_owner_obj_signer, nft_obj, creator_address);
 
         nft_obj
-    }
-
-    /// Construct NFT metadata URI
-    fun construct_nft_metadata_uri(
-        collection_uri: &String,
-        next_nft_id: u64,
-    ): String {
-        let nft_metadata_uri = &mut string::sub_string(
-            collection_uri,
-            0,
-            string::length(collection_uri) - string::length(&string::utf8(b"collection.json"))
-        );
-        debug::print<String>(nft_metadata_uri);
-        let nft_metadata_filename = string_utils::format1(&b"{}.json", next_nft_id);
-        debug::print<String>(&nft_metadata_filename);
-        string::append(nft_metadata_uri, nft_metadata_filename);
-        *nft_metadata_uri
     }
 
     fun royalty(
@@ -370,6 +419,16 @@ module aptos_social_host::aptos_social_feeds {
         let state = borrow_global<AptosSocialFeedState>(@aptos_social_host);
         state.collections
     }
+
+    #[view]
+    public fun get_creators_collections(creator_address: address): vector<Object<Collection>> acquires UserCollections {
+        let state = borrow_global<UserCollections>(creator_address);
+        state.collections
+    }
+
+    // public fun get_collection(collection_obj: Object<Collection>) {
+
+    // }
 
     #[view]
     public fun create_media(url: vector<u8>, mimetype: vector<u8>): Media {

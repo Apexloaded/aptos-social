@@ -70,7 +70,7 @@ function Welcome() {
       if (!mediaFile) return;
       loading({ msg: 'Processing...' });
 
-      const funded = await checkIfFund(aptosWallet, mediaFile.size);
+      const funded = await checkIfFund(aptosWallet, mediaFile.size, false);
       if (!funded)
         throw new Error(
           'Current account balance is not enough to fund a decentralized asset node'

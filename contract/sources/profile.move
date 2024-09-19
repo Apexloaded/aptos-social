@@ -5,6 +5,7 @@ module aptos_social_host::aptos_social_profile {
     use std::vector;
 
     use aptos_std::table::{Self, Table};
+    use aptos_std::debug;
 
     use aptos_framework::event;
     use aptos_framework::timestamp;

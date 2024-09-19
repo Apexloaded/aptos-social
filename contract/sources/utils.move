@@ -1,6 +1,9 @@
 module aptos_social_host::aptos_social_utils {
     use std::string::{Self, String};
+    use std::option::{Self, Option};
     use std::vector;
+
+    use aptos_std::string_utils;
 
     const UPPERCASE_A: u8 = 65; // ASCII value for 'A'
     const UPPERCASE_Z: u8 = 90; // ASCII value for 'Z'
