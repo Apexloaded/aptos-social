@@ -19,6 +19,11 @@ import { Label } from '../ui/label';
 import { addCollectionResolver } from '@/schemas/collection.schema';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { checkIfFund, uploadFolder } from '@/utils/Irys';
+import { createCollection } from '@/aptos/entry/feeds.entry';
+import { aptosClient } from '@/utils/aptosClient';
+import useToast from '@/hooks/toast.hook';
+import { routes } from '@/routes';
+import { useRouter } from 'next/navigation';
 
 const links = [
   {
@@ -54,12 +59,16 @@ const links = [
 ];
 
 export default function CreateCollection() {
+  const router = useRouter();
+
   const logoRef = useRef<HTMLInputElement>(null);
   const featuredRef = useRef<HTMLInputElement>(null);
   const bannerRef = useRef<HTMLInputElement>(null);
   const urlRef = useRef<HTMLInputElement>(null);
 
   const aptosWallet = useWallet();
+  const { account, wallet, signAndSubmitTransaction } = useWallet();
+  const { error, success, loading, updateLoading } = useToast();
 
   const [logoImage, setLogoImage] = useState<File | null>(null);
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
@@ -70,21 +79,50 @@ export default function CreateCollection() {
     watch,
     control,
     trigger,
+    reset,
     handleSubmit,
     formState: { errors, isSubmitting, isLoading, isDirty },
   } = useForm({ ...addCollectionResolver });
-  const customUrl = watch('customUrl');
+  const custom_id = watch('custom_id');
 
   const onSubmit = async (data: FieldValues) => {
+    loading({ msg: 'Processing...' });
     const originalFiles: File[] = [data.logo, data.featured, data.banner];
     const files = renameFiles(originalFiles);
+    updateLoading({ msg: 'Uploading profile images...' });
     const funded = await checkIfFund(aptosWallet, 0, true, files);
     if (funded) {
       try {
         let imageFolderReceipt = await uploadFolder(aptosWallet, files);
-        const logoUrl = `${imageFolderReceipt}/${originalFiles[0].name}`;
-        const featuredUrl = `${imageFolderReceipt}/${originalFiles[1].name}`;
-        const bannerUrl = `${imageFolderReceipt}/${originalFiles[2].name}`;
+        updateLoading({ msg: 'Creating collection...' });
+        const logo_img = `${imageFolderReceipt}/${originalFiles[0].name}`;
+        const featured_img = `${imageFolderReceipt}/${originalFiles[1].name}`;
+        const banner_img = `${imageFolderReceipt}/${originalFiles[2].name}`;
+        const { name, max_supply, custom_id, description, royalty } = data;
+        const response = await signAndSubmitTransaction(
+          createCollection({
+            name,
+            description,
+            max_supply,
+            custom_id,
+            royalty_percentage: royalty,
+            logo_img,
+            banner_img,
+            featured_img,
+          })
+        );
+
+        // Wait for the transaction to be commited to chain
+        const committedTransactionResponse =
+          await aptosClient().waitForTransaction({
+            transactionHash: response.hash,
+          });
+
+        // Once the transaction has been successfully commited to chain, navigate to the `my-assets` page
+        if (committedTransactionResponse.success) {
+          success({ msg: 'Profile was successfully created' });
+          router.push(routes.app.collections.index);
+        }
       } catch (error: any) {
         throw new Error(
           `Error uploading collection image and NFT images ${error}`
@@ -359,26 +397,26 @@ export default function CreateCollection() {
                       className="dark:text-white h-12 pl-0 text-dark border-none"
                     />
                   )}
-                  name="customUrl"
+                  name="custom_id"
                 />
               </div>
             </div>
-            {isAvailable == null && customUrl?.length > 0 && (
+            {isAvailable == null && custom_id?.length > 0 && (
               <p className="text-dark/60 font text-sm">Checking...</p>
             )}
-            {isAvailable == false && customUrl?.length > 0 && (
+            {isAvailable == false && custom_id?.length > 0 && (
               <div className="flex items-center gap-1">
                 <p className="text-danger font text-sm">Custom Url Taken</p>
                 <CircleAlertIcon size={18} className="text-danger" />
               </div>
             )}
-            {isAvailable == true && customUrl?.length > 0 && (
+            {isAvailable == true && custom_id?.length > 0 && (
               <div className="flex items-center gap-1">
                 <p className="text-primary font text-sm">Available</p>
                 <CheckCheckIcon size={18} className="text-primary" />
               </div>
             )}
-            {errors.customUrl && <ShowError error={errors.customUrl.message} />}
+            {errors.custom_id && <ShowError error={errors.custom_id.message} />}
           </div>
           <div className="mt-7 max-w-3xl">
             <Label
@@ -483,7 +521,7 @@ export default function CreateCollection() {
                 </span>
               )}
             </div> */}
-          <div className="mt-7 max-w-3xl">
+          {/* <div className="mt-7 max-w-3xl">
             <p className="font-bold dark:text-gray-100 text-gray-800">Links</p>
             <div className="rounded-xl mt-1 overflow-hidden bg-white dark:bg-dark border border-input">
               {links.map((link, i) => (
@@ -508,7 +546,7 @@ export default function CreateCollection() {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
           <div className="mt-7 max-w-3xl">
             <Button
               disabled={isSubmitting || isLoading || !isDirty}

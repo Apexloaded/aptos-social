@@ -1,20 +1,19 @@
-import { aptosClient } from "@/utils/aptosClient";
-import { prisma } from "@/utils/db";
-import { walletToLowercase } from "@/utils/helpers";
-import { NextRequest, NextResponse } from "next/server";
-import { generateNonce } from "siwe";
+import Auth from '@/models/auth.model';
+import { walletToLowercase } from '@/utils/helpers';
+import { NextRequest, NextResponse } from 'next/server';
+import { generateNonce } from 'siwe';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    console.log("Hello server");
+    console.log('Hello server');
     const { searchParams } = new URL(req.url);
-    const address = searchParams.get("wallet");
+    const address = searchParams.get('wallet');
 
-    console.log("Wallet address: " + address);
+    console.log('Wallet address: ' + address);
     if (!address) {
-      throw new Error("Missing or invalid address");
+      throw new Error('Missing or invalid address');
     }
 
     // const accountInfo = await aptosClient().account.getAccountInfo({
@@ -25,23 +24,24 @@ export async function GET(req: NextRequest) {
     //   throw new Error("Account not found");
     // }
 
-    const auth = await prisma.auth.findUnique({
-      where: {
-        signer: walletToLowercase(address),
-      },
+    const auth = await Auth.findOne({
+      signer: walletToLowercase(address),
     });
 
-    console.log("auth", auth);
+    let response;
     if (!auth) {
       // Register the account
       const newNonce = generateNonce();
-      const newAuth = await prisma.auth.create({
-        data: { nonce: newNonce, signer: walletToLowercase(address) },
+      const newAuth = await Auth.create({
+        nonce: newNonce,
+        signer: walletToLowercase(address),
       });
-      return NextResponse.json({ nonce: newAuth.nonce });
+      response = NextResponse.json({ nonce: newAuth.nonce });
+    } else {
+      // Authenticate the account
+      response = NextResponse.json({ nonce: auth.nonce });
     }
-
-    return NextResponse.json({ nonce: auth.nonce });
+    return response;
   } catch (error) {
     console.log(error);
     return NextResponse.json({ error });

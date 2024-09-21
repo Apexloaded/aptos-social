@@ -1,4 +1,4 @@
-import { UserInterface } from "./user.interface";
+import { UserInterface } from './user.interface';
 
 export interface IMediaType {
   url: string;
@@ -29,4 +29,13 @@ export interface IPost {
 
 export interface IPostItem {
   post: IPost;
+}
+
+export interface INewPost {
+  content: string;
+  price: number;
+  media_urls: Array<string>;
+  media_mimetypes: Array<string>;
+  metadata_uri: string;
+  collection_obj: string;
 }

@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { Status } from "./ProfileHeader";
-import { Button } from "../ui/button";
+import React, { useState } from 'react';
+import { Status } from './ProfileHeader';
+import { Button } from '../ui/button';
 
 type Props = {
   to: string;
@@ -12,6 +12,7 @@ type Props = {
 function ConnectButton({ to, status }: Props) {
   // const { MessengerABI, dexaMessenger } = useDexa();
   const [isLoading, setIsLoading] = useState<boolean>();
+  const [isPending, setIsPending] = useState<boolean>(true);
   // const { loading, success, error } = useToast();
   // const { writeContractAsync, isPending } = useWriteContract();
   const sendConnectReq = async () => {
@@ -48,7 +49,7 @@ function ConnectButton({ to, status }: Props) {
       onClick={sendConnectReq}
       disabled={isLoading || isPending || status?.isRequest}
     >
-      {status?.isRequest ? "Requested" : "Connect"}
+      {status?.isRequest ? 'Requested' : 'Connect'}
     </Button>
   );
 }

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { AptosSocialLogo } from "@/components/Icons/Icons";
-import { ListConnectors } from "@/components/Auth/ListConnectors";
-import SignInModal from "@/components/Auth/Signature";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { getNonce } from "@/actions/auth.action";
+import React, { useEffect, useState } from 'react';
+import { AptosSocialLogo } from '@/components/Icons/Icons';
+import { ListConnectors } from '@/components/Auth/ListConnectors';
+import SignInModal from '@/components/Auth/Signature';
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { getNonce } from '@/actions/auth.action';
 
 export default function Login() {
   const [signModal, setSignModal] = useState<boolean>(false);
@@ -22,6 +22,7 @@ export default function Login() {
     }
     iniModal();
   }, [connected, account]);
+
 
   return (
     <div className="px-5 bg-primary/5 h-svh">

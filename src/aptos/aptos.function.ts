@@ -12,6 +12,21 @@ export const find_creator: `${string}::${string}::${string}` = `${AccountAddress
 export const find_creator_by_name: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${profile}::find_creator_by_name`;
+
+
+/**
+ * Feeds Modules Functions
+ */
 export const create_collection: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${feeds}::create_collection`;
+export const get_creators_collections: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::get_creators_collections`;
+export const get_metadata: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::get_metadata`;
+export const mint_post: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::mint_post`;
+

@@ -5,7 +5,7 @@ import {
   CheckCheckIcon,
   CircleAlertIcon,
   Edit2Icon,
-  Image,
+  ImageIcon,
 } from 'lucide-react';
 import { Controller, FieldValues, useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
@@ -19,11 +19,17 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import FileSelector from '../ui/fileselector';
 import MediaPreview from '../Posts/MediaPreview';
-import { isNameTaken } from '@/aptos/aptos.view';
-import { checkIfFund, uploadFile } from '@/utils/Irys';
-import { registerCreator } from '@/aptos/entry-functions/register-creator';
+import { isNameTaken } from '@/aptos/view/profile.view';
 import { aptosClient } from '@/utils/aptosClient';
 import { routes } from '@/routes';
+import { completeOnboarding } from '@/actions/auth.action';
+import { registerCreator } from '@/aptos/entry/profile.entry';
+import { useAccount } from '@/context/account.context';
+import { Path } from '@/config/session.enum';
+import ShortUniqueId from 'short-unique-id';
+import Image from 'next/image';
+import { PinResponse } from 'pinata-web3';
+import { IPFS_URL } from '@/config/constants';
 
 function Welcome() {
   const aptosWallet = useWallet();
@@ -38,10 +44,11 @@ function Welcome() {
     reset,
     formState: { errors, isSubmitting, isValid },
   } = useForm(welcomeResolver);
+
   const username = watch('username');
-  const { account, wallet, signAndSubmitTransaction } = useWallet();
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const { error, success, loading, updateLoading } = useToast();
+  const { account, signAndSubmitTransaction } = useAccount();
 
   const checkUsername = useCallback(
     debounce(async (username) => {
@@ -70,14 +77,25 @@ function Welcome() {
       if (!mediaFile) return;
       loading({ msg: 'Processing...' });
 
-      const funded = await checkIfFund(aptosWallet, mediaFile.size, false);
-      if (!funded)
-        throw new Error(
-          'Current account balance is not enough to fund a decentralized asset node'
-        );
+      const uid = new ShortUniqueId();
+      const fileExtension = mediaFile.name.split('.').pop();
+      const filename = `${uid.stamp(32)}.${fileExtension}`;
+      const file = new File([mediaFile], filename, {
+        type: mediaFile.type,
+      });
+
+      const formData = new FormData();
+      formData.append('file', file);
 
       updateLoading({ msg: 'Uploading profile image...' });
-      const pfpUrl = await uploadFile(aptosWallet, mediaFile);
+      const fileUpload = await fetch('/api/upload/files', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await fileUpload.json();
+      const { IpfsHash } = data as PinResponse;
+      const pfpUrl = `https://${IpfsHash}.${IPFS_URL}`;
 
       updateLoading({ msg: 'Creating profile...' });
       const response = await signAndSubmitTransaction(
@@ -90,17 +108,21 @@ function Welcome() {
       );
 
       // Wait for the transaction to be commited to chain
-      const committedTransactionResponse =
-        await aptosClient().waitForTransaction({
-          transactionHash: response.hash,
-        });
+      if (response) {
+        const committedTransactionResponse =
+          await aptosClient().waitForTransaction({
+            transactionHash: response.hash,
+          });
 
-      // Once the transaction has been successfully commited to chain, navigate to the `my-assets` page
-      if (committedTransactionResponse.success) {
-        success({ msg: 'Profile was successfully created' });
-        router.push(routes.app.home);
+        // Once the transaction has been successfully commited to chain, navigate to the `my-assets` page
+        if (committedTransactionResponse.success) {
+          await completeOnboarding(`${account?.accountAddress.toString()}`);
+          success({ msg: 'Profile was successfully created' });
+          router.push(routes.app.home);
+        }
       }
     } catch (err: any) {
+      console.log(err);
       // const msg = getError(err);
       error({ msg: `Error creating profile` });
     }
@@ -117,6 +139,7 @@ function Welcome() {
                 if (ev.target.files) {
                   const file = ev.target.files[0];
                   setMediaFile(file);
+                  console.log(file);
                   setValue('pfp', file);
                   onChange(file);
                 }
@@ -132,7 +155,7 @@ function Welcome() {
               {mediaFile ? (
                 <MediaPreview file={mediaFile} onClear={removeMedia} />
               ) : (
-                <Image size={30} className="text-dark/50" />
+                <ImageIcon size={30} className="text-dark/50" />
               )}
               <div className="bg-white absolute -bottom-2 h-7 w-7 flex items-center shadow-md justify-center rounded-full -right-2">
                 <div className="flex items-center justify-center rounded-full border border-dark/60 h-6 w-6">
@@ -152,6 +175,13 @@ function Welcome() {
           Aptos.Social onchain profile.
         </p>
       </div>
+      {/* <Image
+        src="https://bafkreigmo34gtfqduxgpfwlcpjsp6siarppmi4a6tib73chszqv3rt5zy4.ipfs.dweb.link"
+        alt="profile"
+        height={400}
+        width={400}
+        priority
+      /> */}
       <div className="flex flex-col w-full border border-medium/30 gap-4 bg-white rounded-xl p-5">
         <Controller
           control={control}

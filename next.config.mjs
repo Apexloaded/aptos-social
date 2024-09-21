@@ -17,7 +17,17 @@ const nextConfig = {
         port: '',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: '**.ipfs.dweb.link',
+        pathname: '**',
+      },
     ],
+  },
+  experimental: {
+    esmExternals: 'loose',
+    serverComponentsExternalPackages: ['mongoose'],
+    instrumentationHook: true,
   },
 };
 export default nextConfig;

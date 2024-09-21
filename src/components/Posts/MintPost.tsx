@@ -1,33 +1,43 @@
-"use client";
+'use client';
 
-import { useState, useRef } from "react";
-import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
-import { Button } from "../ui/button";
-import { Controller, FieldValues, useForm } from "react-hook-form";
-import DexaEditor, { DexaEditorHandle } from "../Editor/DexaEditor";
-import CreatorPFP from "../Creator/CreatorPFP";
-import PostCounter from "./PostCounter";
+import { useState, useRef } from 'react';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
+import { Button } from '../ui/button';
+import { Controller, FieldValues, useForm } from 'react-hook-form';
+import DexaEditor, { DexaEditorHandle } from '../Editor/DexaEditor';
+import CreatorPFP from '../Creator/CreatorPFP';
+import PostCounter from './PostCounter';
 import {
   ImageIcon,
   SmilePlusIcon,
   ShieldQuestionIcon,
   CalendarPlusIcon,
   XIcon,
-} from "lucide-react";
-import GifIcon from "@heroicons/react/24/outline/GifIcon";
-import FileSelector from "../ui/fileselector";
-import MediaPreview from "./MediaPreview";
-import ShowError from "../ui/inputerror";
-import { postResolver } from "@/schemas/post.schema";
+} from 'lucide-react';
+import GifIcon from '@heroicons/react/24/outline/GifIcon';
+import useToast from '@/hooks/toast.hook';
+import FileSelector from '../ui/fileselector';
+import MediaPreview from './MediaPreview';
+import ShowError from '../ui/inputerror';
+import { postResolver } from '@/schemas/post.schema';
+import { aptosClient } from '@/utils/aptosClient';
+import { routes } from '@/routes';
+import { useRouter } from 'next/navigation';
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { mintPost } from '@/aptos/entry/feeds.entry';
 
 export function MintPost() {
+  const router = useRouter();
   const editorRef = useRef<DexaEditorHandle>(null);
   const mediaRef = useRef<HTMLInputElement>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const aptosWallet = useWallet();
+  const { signAndSubmitTransaction } = useWallet();
   const [maxWord] = useState(70);
+  const [isOpen, setIsOpen] = useState(false);
   const [percentage, setPercentage] = useState(0);
   const [exceededCount, setExceededCount] = useState(0);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const { error, loading, updateLoading, success } = useToast();
   const {
     reset,
     control,
@@ -37,11 +47,11 @@ export function MintPost() {
     watch,
   } = useForm({
     ...postResolver,
-    reValidateMode: "onChange",
-    mode: "onChange",
+    reValidateMode: 'onChange',
+    mode: 'onChange',
   });
-  const content = watch("content", "");
-  const isEmptyContent = content === "<p></p>";
+  const content = watch('content', '');
+  const isEmptyContent = content === '<p></p>';
 
   const onWordCount = (count: number) => {
     const percentage = (count / maxWord) * 100;
@@ -67,10 +77,49 @@ export function MintPost() {
   const removeMedia = () => {
     reset({ images: undefined });
     setMediaFile(null);
-    if (mediaRef.current) mediaRef.current.value = "";
+    if (mediaRef.current) mediaRef.current.value = '';
   };
 
-  const onSubmit = () => {};
+  const onSubmit = async (data: FieldValues) => {
+    try {
+      if (!mediaFile) return;
+      loading({ msg: 'Processing...' });
+
+      const media_urls = [''];
+      const media_mimetypes = [''];
+      const metadata_uri = '';
+      const collection_obj = '';
+
+      updateLoading({ msg: 'Creating profile...' });
+      const response = await signAndSubmitTransaction(
+        mintPost({
+          content,
+          price: 0,
+          media_urls,
+          media_mimetypes,
+          metadata_uri,
+          collection_obj,
+        })
+      );
+
+      // Wait for the transaction to be commited to chain
+      const committedTransactionResponse =
+        await aptosClient().waitForTransaction({
+          transactionHash: response.hash,
+        });
+
+      // Once the transaction has been successfully commited to chain, navigate to the `my-assets` page
+      if (committedTransactionResponse.success) {
+        success({ msg: 'Profile was successfully created' });
+        close();
+        router.push(routes.app.home);
+      }
+    } catch (err: any) {
+      // const msg = getError(err);
+      error({ msg: `Error creating profile` });
+    }
+  };
+
   return (
     <>
       <Button onClick={open} size="lg" className="w-full font-bold">

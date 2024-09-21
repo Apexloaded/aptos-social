@@ -16,7 +16,7 @@ export const addCollection = yup.object({
   name: yup.string().required('Enter your collection name'),
   max_supply: yup.string().required('Enter maximum collections supply'),
   royalty: yup.string(),
-  customUrl: yup.string().required('Enter a custom name'),
+  custom_id: yup.string().required('Enter a custom name'),
   description: yup.string().required('Enter your collection description'),
 });
 

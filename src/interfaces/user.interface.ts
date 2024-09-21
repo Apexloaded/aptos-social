@@ -14,3 +14,10 @@ export interface UserInterface {
   created_at?: string;
   website?: string;
 }
+
+export interface INewUser {
+  name: string;
+  username: string;
+  email: string;
+  pfp: string;
+}

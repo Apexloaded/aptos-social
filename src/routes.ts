@@ -10,7 +10,7 @@ export const publicRoutes = ['/', '/support'];
 
 export const routes = {
   home: '/',
-  login: '/login',
+  login: '/auth/login',
   app: {
     home: '/feeds',
     explore: '/explore',

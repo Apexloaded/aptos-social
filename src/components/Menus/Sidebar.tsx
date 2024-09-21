@@ -29,12 +29,7 @@ import { Icon } from '../Icons/Icons';
 import { routes } from '@/routes';
 import clsx from 'clsx';
 import { useMediaQuery } from '@/hooks/media-query.hook';
-import { Button } from '../ui/button';
-
 import { MintPost } from '../Posts/MintPost';
-import { useQuery } from '@tanstack/react-query';
-import { getUserProfile } from '@/aptos/aptos.view';
-import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useAuth } from '@/context/auth.context';
 import { ISectionedMenu } from '@/interfaces/menu.interface';
 import { MenuItems } from './MenuItems';

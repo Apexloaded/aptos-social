@@ -15,7 +15,7 @@ module aptos_social_host::feeds_test {
 
     use aptos_token_objects::collection::{Self, Collection};
     
-    use aptos_social_host::aptos_social_feeds::{Self, Media};
+    use aptos_social_host::aptos_social_feeds::{Self, Media, CollectionMetadata};
     use aptos_social_host::profile_test;
 
     #[test(aptos_framework = @0x1, account = @aptos_social_host)]
@@ -45,7 +45,9 @@ module aptos_social_host::feeds_test {
         let result = aptos_social_feeds::get_global_collections();
         let collection_1 = *vector::borrow(&result, vector::length(&result) - 1);
 
-        // debug::print<vector<Object<Collection>>>(&result);
+        let metadata = aptos_social_feeds::get_metadata(collection_1);
+        debug::print<CollectionMetadata>(&metadata);
+
         assert!(vector::length(&result) == 1, 1);
     }
 
@@ -86,7 +88,7 @@ module aptos_social_host::feeds_test {
         // debug::pring<Object<Collection>>(collection_1);
         
         let creator_address = signer::address_of(account);
-        debug::print<address>(&creator_address);
+        // debug::print<address>(&creator_address);
         let owner_constructor_ref = &object::create_object(creator_address);
         let owner_obj_signer = &object::generate_signer(owner_constructor_ref);
         let address_of_owner = signer::address_of(owner_obj_signer);
