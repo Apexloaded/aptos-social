@@ -29,18 +29,16 @@ import useCollections from '@/hooks/collections.hook';
 import { useAccount } from '@/context/account.context';
 import { IUploadFilesResponse } from '@/interfaces/response.interface';
 import { IPFS_URL } from '@/config/constants';
-import { generateText } from '@/actions/openai.action';
-import { readStreamableValue } from 'ai/rsc';
 import { uploadFile, uploadFiles } from '@/actions/pinata.action';
 import { PinResponse } from 'pinata-web3';
-import { generate_nft_story_prompt } from '@/lib/prompts';
 import { QueryKeys } from '@/config/query-keys';
 import { queryClient } from '@/providers/ReactQueryProvider';
 
-export function MintPost() {
+export function CommentModal() {
   const router = useRouter();
   const editorRef = useRef<DexaEditorHandle>(null);
   const mediaRef = useRef<HTMLInputElement>(null);
+  const aptosWallet = useWallet();
   const { signAndSubmitTransaction } = useAccount();
   const { collections } = useCollections();
   const [maxWord] = useState(70);
@@ -89,24 +87,6 @@ export function MintPost() {
     reset({ images: undefined });
     setMediaFile(null);
     if (mediaRef.current) mediaRef.current.value = '';
-  };
-
-  const onAiInit = async () => {
-    if (!mediaFile) return;
-    const formdata = new FormData();
-    formdata.append('image', mediaFile);
-    const { output } = await generateText(generate_nft_story_prompt, formdata);
-
-    let text = '';
-    for await (const delta of readStreamableValue(output)) {
-      text += delta;
-      editorRef.current?.setValue(text);
-      setValue('content', `${text}`, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    }
-    console.log(text);
   };
 
   const onSubmit = async (data: FieldValues) => {
@@ -195,10 +175,6 @@ export function MintPost() {
 
   return (
     <>
-      <Button onClick={open} size="lg" className="w-full font-bold">
-        Mint a Post
-      </Button>
-
       <Dialog
         open={isOpen}
         as="div"
@@ -299,14 +275,6 @@ export function MintPost() {
                     className="rounded-full"
                   >
                     <p className="text-sm font-semibold">{'Mint'}</p>
-                  </Button>
-                  <Button
-                    onClick={onAiInit}
-                    type={'button'}
-                    size={'default'}
-                    className="rounded-full"
-                  >
-                    <p className="text-sm font-semibold">{'AI'}</p>
                   </Button>
                 </div>
               </div>

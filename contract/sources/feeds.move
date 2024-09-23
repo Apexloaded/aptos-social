@@ -23,7 +23,7 @@ module aptos_social_host::aptos_social_feeds {
     use minter::collection_components;
 
     use aptos_social_host::aptos_social_utils;
-    use aptos_social_host::aptos_social_profile;
+    use aptos_social_host::aptos_social_profile::{Self, Creator};
 
     // Error codes
     const ERROR_INVALID_STRING: u64 = 0;
@@ -38,8 +38,12 @@ module aptos_social_host::aptos_social_feeds {
         mimetype: String,
     }
 
+    struct PostItem has key, store {
+        creator: Creator,
+        post: Post,
+    }
     // Post structure
-    struct Post has store, copy {
+    struct Post has store, copy, drop {
         id: u64,
         author: address,
         content: String,
@@ -76,6 +80,7 @@ module aptos_social_host::aptos_social_feeds {
         featured_img: String,
         custom_id: String,
         website: String,
+        is_default: bool,
         collection_address: address,
         mint_fee_per_nft_by_stages: SimpleMap<String, u64>,
         mint_enabled: bool,
@@ -228,8 +233,9 @@ module aptos_social_host::aptos_social_feeds {
         let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
         vector::push_back(&mut state.collections, collection_obj);
         table::add(&mut state.custom_collection_name, id, collection_obj);
-        store_nft_metadata(
+        store_collection_metadata(
             collection_obj_signer,
+            creator_address,
             uri,
             id,
             logo_img,
@@ -259,6 +265,7 @@ module aptos_social_host::aptos_social_feeds {
         collection_obj: Object<Collection>,
     ) acquires AptosSocialFeedState, CollectionConfig, CollectionAccessConfig {
         let creator_address = signer::address_of(account);
+        assert!(string::length(&content) > 0, ERROR_INVALID_STRING);
 
         let collection_config = borrow_global<CollectionConfig>(object::object_address(&collection_obj));
         let access_config_obj = collection_config.collection_access_config;
@@ -272,8 +279,7 @@ module aptos_social_host::aptos_social_feeds {
         let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
         let post_id = state.post_count + 1;
         
-        let stringedContent = string::utf8(content);
-        let hashtags = aptos_social_utils::extract_hashtags(&stringedContent);
+        let hashtags = aptos_social_utils::extract_hashtags(&content);
 
         let media = vector::empty<Media>();
         let media_length = vector::length(&media_urls);
@@ -281,12 +287,12 @@ module aptos_social_host::aptos_social_feeds {
         while (i < media_length) {
             let url = *vector::borrow(&media_urls, i);
             let mimetype = *vector::borrow(&media_mimetypes, i);
-            let media_item = Media { url, mimetype };
+            let media_item = create_media(url, mimetype);
             vector::push_back(&mut media, media_item);
             i = i + 1;
         };
 
-        let nft_obj = mint_nft_internal(creator_address, collection_obj, string::utf8(metadata_uri));
+        let nft_obj = mint_nft_internal(creator_address, collection_obj, metadata_uri);
         let post = Post {
             id: post_id,
             author: creator_address,
@@ -323,8 +329,9 @@ module aptos_social_host::aptos_social_feeds {
      ****************************************************************/
     
     // Store NFT Metadata to storage
-    inline fun store_nft_metadata(
+    inline fun store_collection_metadata(
         col_obj_signer: &signer,
+        creator_address: address,
         uri: String,
         custom_id: String,
         logo_img: Option<String>,
@@ -334,19 +341,26 @@ module aptos_social_host::aptos_social_feeds {
     ) acquires CollectionMetadata {
         let logo = string::utf8(b"");
         if(option::is_some(&logo_img)) {
-            logo = string_utils::to_string(&logo_img);
+            logo = *option::borrow(&logo_img);
         };
 
         let banner = string::utf8(b"");
         if(option::is_some(&banner_img)) {
-            banner = string_utils::to_string(&banner_img);
+            banner = *option::borrow(&banner_img);
         };
 
         let featured = string::utf8(b"");
         if(option::is_some(&featured_img)) {
-            featured = string_utils::to_string(&featured_img);
+            featured = *option::borrow(&featured_img);
         };
 
+        let is_default = true;
+        let state = borrow_global<UserCollections>(creator_address);
+        if(vector::length(&state.collections) > 1 ) {
+            is_default = false;
+        };
+
+        debug::print<bool>(&is_default);
         move_to(col_obj_signer, CollectionMetadata {
             created_at: timestamp::now_seconds(),
             logo_img: logo,
@@ -354,6 +368,7 @@ module aptos_social_host::aptos_social_feeds {
             banner_img: banner,
             featured_img: featured,
             website: uri,
+            is_default,
             collection_address,
             mint_fee_per_nft_by_stages: simple_map::new(),
             mint_enabled: true,
@@ -402,6 +417,15 @@ module aptos_social_host::aptos_social_feeds {
         }
     }
 
+    inline fun generate_post_data(post: Post): PostItem {
+        let creator = aptos_social_profile::find_creator(post.author);
+        PostItem {post, creator}
+    }
+
+    /****************************************************************
+     * APTOS SOCIAL FEED VIEW FUNCTIONS
+     ****************************************************************/
+
     #[view]
     /// Get all collections created using this contract
     public fun get_global_collections(): vector<Object<Collection>> acquires AptosSocialFeedState {
@@ -426,6 +450,7 @@ module aptos_social_host::aptos_social_feeds {
             featured_img: metadata_ref.featured_img,
             custom_id: metadata_ref.custom_id,
             website: metadata_ref.website,
+            is_default: metadata_ref.is_default,
             collection_address: metadata_ref.collection_address,
             mint_fee_per_nft_by_stages: metadata_ref.mint_fee_per_nft_by_stages,
             mint_enabled: metadata_ref.mint_enabled,
@@ -434,19 +459,32 @@ module aptos_social_host::aptos_social_feeds {
     }
 
     #[view]
-    public fun list_all_posts(): vector<Post> acquires AptosSocialFeedState {
+    public fun list_all_posts(): vector<PostItem> acquires AptosSocialFeedState {
         let state = borrow_global<AptosSocialFeedState>(@aptos_social_host);
-        state.posts
+        let posts_array = state.posts;
+        let posts = vector::empty<PostItem>();
+        let length = vector::length(&posts_array);
+        let i = 0;
+        while (i < length) {
+            let post = *vector::borrow(&posts_array, i);
+            if(post.is_comment == false) {
+                let post_item = generate_post_data(post);
+                vector::push_back(&mut posts, post_item);
+            };
+            i = i + 1;
+        };
+        posts
     }
 
     #[view]
-    public fun get_post_by_id(post_id: u64): Post acquires AptosSocialFeedState {
+    public fun get_post_by_id(post_id: u64): PostItem acquires AptosSocialFeedState {
         let state = borrow_global<AptosSocialFeedState>(@aptos_social_host);
-        *table::borrow(&state.post_item, post_id)
+        let post = *table::borrow(&state.post_item, post_id);
+        generate_post_data(post)
     }
 
     #[view]
-    public fun create_media(url: vector<u8>, mimetype: vector<u8>): Media {
+    public fun create_media(url: String, mimetype: String): Media {
         Media { url, mimetype }
     }
 

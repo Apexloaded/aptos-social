@@ -1,0 +1,2 @@
+export const generate_nft_story_prompt =
+  'Generate a unique and engaging backstory for this NFT image, with a maximum of 70 words. Ensure the story is realistic and formatted using <p> tags (not <div>). Include a few unique @ mentions and relevant hashtags. Avoid repeating names, words, or themes across responses, and ensure no special formatting characters like ``` or code blocks are displayed.';

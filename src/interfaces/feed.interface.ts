@@ -8,27 +8,25 @@ export interface IMediaType {
 export interface IPost {
   id: string;
   author: string;
-  tokenId: string;
-  creator: UserInterface;
+  collector: string;
+  token_obj: {inner: string};
   content: string;
-  createdAt: string;
-  updatedAt: string;
-  remintPrice: string;
-  remintCount: string;
-  tipCount: string;
-  remintToken: string;
+  created_at: string;
+  metadata_uri: string;
+  price: string;
+  tip_count: number;
   media: IMediaType[];
-  isReminted: boolean;
-  remintedPost: string;
-  remintedBy: string[];
-  likedBy: string[];
-  parentId: number;
-  commentCount: number;
-  isMintable: boolean;
+  hashtag: string[];
+  is_collectible: boolean;
+  liked_by: string[];
+  parent_id: string;
+  comment_count: number;
+  is_comment: boolean;
 }
 
 export interface IPostItem {
   post: IPost;
+  creator: UserInterface;
 }
 
 export interface INewPost {

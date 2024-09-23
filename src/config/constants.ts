@@ -7,6 +7,7 @@ export const HOSTNAME = process.env.NEXT_PUBLIC_HOSTNAME;
 export const API_URL = `http://localhost:3000/api`;
 export const DATABASE_URL = process.env.DATABASE_URL || '';
 export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_AUTH_GOOGLE_ID;
+export const DEFAULT_COLLECTION = process.env.NEXT_PUBLIC_DEFAULT_COLLECTION;
 
 export const PINATA_JWT = process.env.NEXT_PRIVATE_PINATA_JWT || '';
 export const PINATA_GATEWAY = process.env.NEXT_PRIVATE_PINATA_GATEWAY || '';

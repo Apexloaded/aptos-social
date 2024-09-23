@@ -13,6 +13,7 @@ export const routes = {
   login: '/auth/login',
   app: {
     home: '/feeds',
+    welcome: '/welcome',
     explore: '/explore',
     messages: {
       index: '/messages',

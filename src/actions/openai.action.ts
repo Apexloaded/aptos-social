@@ -2,9 +2,14 @@
 
 import { openAi, openai } from '@/lib/ai';
 import { CoreMessage, streamText } from 'ai';
-import { createStreamableValue } from 'ai/rsc';
+import { createStreamableValue, StreamableValue } from 'ai/rsc';
 
-export async function generateText(prompt: string, formdata: FormData) {
+export async function generateText(
+  prompt: string,
+  formdata: FormData
+): Promise<{
+  output: StreamableValue<string, any>;
+}> {
   const stream = createStreamableValue('');
   const image = formdata.get('image') as File | null;
 

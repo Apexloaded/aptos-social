@@ -1,5 +1,5 @@
-import { MessageSquareTextIcon } from "lucide-react";
-import { ButtonProps } from "../PostButtons";
+import { MessageSquareTextIcon } from 'lucide-react';
+import { ButtonProps } from '../PostButtons';
 
 export function CommentButton({ post }: ButtonProps) {
   return (
@@ -9,7 +9,7 @@ export function CommentButton({ post }: ButtonProps) {
         className="text-dark dark:text-white group-hover:text-primary"
       />
       <p className="text-xs group-hover:text-primary text-dark dark:text-white">
-        398
+        {post.comment_count > 0 ? post.comment_count : ''}
       </p>
     </div>
   );

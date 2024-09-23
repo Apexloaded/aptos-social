@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState } from 'react';
 import {
   Account,
   EphemeralKeyPair,
+  ExecutionFinishEventData,
+  InputGenerateTransactionPayloadData,
   KeylessAccount,
   PendingTransactionResponse,
 } from '@aptos-labs/ts-sdk';
@@ -22,6 +24,9 @@ interface AccountContextType {
   connected: boolean;
   disconnect: () => void;
   address?: `0x${string}`;
+  signAndSubmitBatchTransaction: (
+    transactions: InputGenerateTransactionPayloadData[]
+  ) => Promise<ExecutionFinishEventData | unknown>;
 }
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);

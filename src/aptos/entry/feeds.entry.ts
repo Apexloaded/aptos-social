@@ -45,6 +45,7 @@ export const mintPost = (args: INewPost): InputTransactionData => {
     metadata_uri,
     collection_obj,
   } = args;
+  console.log(args);
   return {
     data: {
       function: mint_post,

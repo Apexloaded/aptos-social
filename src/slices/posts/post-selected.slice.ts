@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { IPost } from "@/interfaces/feed.interface";
+import { IPostItem } from "@/interfaces/feed.interface";
 
 export interface PostSelect {
-  post?: IPost;
+  post?: IPostItem;
 }
 
 const initialState = {
@@ -14,7 +14,7 @@ export const postSelectedSlice = createSlice({
   name: "post-selected",
   initialState,
   reducers: {
-    selectPost: (state, action: PayloadAction<IPost>) => {
+    selectPost: (state, action: PayloadAction<IPostItem>) => {
       console.log(action.payload);
       state.post = action.payload;
     },

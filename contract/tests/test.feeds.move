@@ -36,9 +36,9 @@ module aptos_social_host::feeds_test {
         let max_supply = 10000;
         let custom_id = string::utf8(b"james-d");
         let royalty_percentage = option::some(10);
-        let logo = option::none();
-        let banner = option::none();
-        let featured = option::none();
+        let logo = option::some(string::utf8(b"ipfs://"));
+        let banner = option::some(string::utf8(b"ipfs://"));
+        let featured = option::some(string::utf8(b"ipfs://"));
 
         aptos_social_feeds::create_collection(account, name, description, max_supply, custom_id, royalty_percentage, logo, banner, featured);
 
@@ -70,12 +70,12 @@ module aptos_social_host::feeds_test {
 
         // Test inputs
         let token_id = b"token123";
-        let content = b"Sample post content";
+        let content = string::utf8(b"Sample post content");
         let price = 1000;
         let token_address = 0x1;
-        let metadata_uri = b"ipfs://some_metadata";
-        let media_urls = vector::singleton(b"http://example.com/image.png");
-        let media_mimetypes = vector::singleton(b"image/png");
+        let metadata_uri = string::utf8(b"ipfs://some_metadata");
+        let media_urls = vector::singleton(string::utf8(b"http://example.com/image.png"));
+        let media_mimetypes = vector::singleton(string::utf8(b"image/png"));
 
 
         // debug::print<vector<u8>>(&content);

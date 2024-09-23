@@ -1,25 +1,25 @@
-"use client";
+'use client';
 
-import React, { useEffect } from "react";
-import { Button } from "../ui/button";
-import { BellRingIcon, EllipsisIcon, Grid2x2PlusIcon } from "lucide-react";
-import NFT1 from "@/assets/nft/1.png";
-import Image from "next/image";
-import ShowMore from "./ShowMore";
-import { useRouter } from "next/navigation";
-import { routes } from "@/routes";
-import { IPostItem } from "@/interfaces/feed.interface";
-import { PostButtons } from "./PostButtons";
-import { BookmarkButton } from "./Buttons/BookmarkButton";
-import { useAppDispatch } from "@/hooks/redux.hook";
-import CreatorName from "../Creator/CreatorName";
-import CreatorPFP from "../Creator/CreatorPFP";
-import { selectPost } from "@/slices/posts/post-selected.slice";
+import React, { useEffect } from 'react';
+import { Button } from '../ui/button';
+import { BellRingIcon, EllipsisIcon, Grid2x2PlusIcon } from 'lucide-react';
+import NFT1 from '@/assets/nft/1.png';
+import Image from 'next/image';
+import ShowMore from './ShowMore';
+import { useRouter } from 'next/navigation';
+import { routes } from '@/routes';
+import { IPostItem } from '@/interfaces/feed.interface';
+import { PostButtons } from './PostButtons';
+import { BookmarkButton } from './Buttons/BookmarkButton';
+import { useAppDispatch } from '@/hooks/redux.hook';
+import CreatorName from '../Creator/CreatorName';
+import CreatorPFP from '../Creator/CreatorPFP';
+import { selectPost } from '@/slices/posts/post-selected.slice';
 
-export function PostItem({ post }: IPostItem) {
+export function PostItem({ post, creator }: IPostItem) {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const username = post.creator.username;
+  const username = creator.username;
 
   useEffect(() => {
     router.prefetch(routes.app.mints(`${username}`, post.id));
@@ -29,7 +29,7 @@ export function PostItem({ post }: IPostItem) {
     router.push(routes.app.mints(`${username}`, post.id), {
       scroll: false,
     });
-    dispatch(selectPost(post));
+    dispatch(selectPost({ post, creator }));
   };
 
   return (
@@ -40,11 +40,15 @@ export function PostItem({ post }: IPostItem) {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-x-2">
-          <CreatorPFP username="elonmusk" name="Elon Musk" />
+          <CreatorPFP
+            username={creator.username}
+            name={creator.name}
+            pfp={creator.pfp}
+          />
           <CreatorName
-            username="elonmusk"
-            name="Elon Musk"
-            createdAt="2024-09-08T10:34:23.000Z"
+            username={creator.username}
+            name={creator.name}
+            createdAt={post.created_at}
           />
         </div>
         <div className="flex items-center gap-x-2">
@@ -58,11 +62,11 @@ export function PostItem({ post }: IPostItem) {
       </div>
       <div className="mt-4 mb-3 rounded-2xl border border-light dark:border-dark-light max-h-[35rem] overflow-hidden">
         <Image
-          src={NFT1}
+          src={post.media[0].url}
           height={400}
           width={600}
           placeholder="blur"
-          alt={""}
+          alt={post.id}
           priority={true}
           blurDataURL="LEHV6nWB2yk8pyo0adR*.7kCMdnj"
         />
@@ -70,13 +74,15 @@ export function PostItem({ post }: IPostItem) {
       <div className="flex items-center py-1 justify-between">
         <PostButtons post={post} />
         <div className="flex items-center">
-          <Button size="sm" variant="default" className="rounded-full">
-            <Grid2x2PlusIcon size={16} />
-            <p>Collect</p>
-          </Button>
+          {post.collector !== '0x0' && post.is_collectible === true && (
+            <Button size="sm" variant="default" className="rounded-full">
+              <Grid2x2PlusIcon size={16} />
+              <p>Collect</p>
+            </Button>
+          )}
           <Button
-            size={"icon"}
-            variant={"ghost"}
+            size={'icon'}
+            variant={'ghost'}
             className="dark:hover:bg-dark"
           >
             <BookmarkButton post={post} />

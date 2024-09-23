@@ -1,6 +1,10 @@
 import { aptosClient } from './aptosClient';
+import ShortUniqueId from 'short-unique-id';
 
 export const APT_DECIMALS = 8;
+const uid = new ShortUniqueId({
+  dictionary: 'hex',
+});
 
 export const convertAmountFromHumanReadableToOnChain = (
   value: number,
@@ -68,8 +72,12 @@ export const isValidAptosAddress = (address: string) => {
 
 export const renameFile = (file: File) => {
   const extension = file.name.split('.').pop();
-  const newName = `${Date.now()}-${Math.floor(
-    Math.random() * 10000
-  )}.${extension}`;
+  const uuid = uid.stamp(32);
+  const newName = `${uuid}.${extension}`;
   return new File([file], newName, { type: file.type });
+};
+
+export const timestampToDate = (time: string | number) => {
+  const date = new Date(Number(time) * 1000);
+  return date;
 };

@@ -1,6 +1,11 @@
 import { aptosClient } from '@/utils/aptosClient';
-import { get_creators_collections, get_metadata } from '../aptos.function';
+import {
+  get_creators_collections,
+  get_metadata,
+  list_all_posts,
+} from '../aptos.function';
 import { ICollection } from '@/interfaces/collection.interface';
+import { IPost, IPostItem } from '@/interfaces/feed.interface';
 
 export const getAllCollections = async (
   address: string
@@ -27,6 +32,16 @@ export const getCollectionMetadata = async (
     payload: {
       function: get_metadata,
       functionArguments: [collection_address],
+    },
+  });
+  return response[0];
+};
+
+export const getAllPosts = async (): Promise<IPostItem[]> => {
+  const response = await aptosClient().view<[Array<IPostItem>]>({
+    payload: {
+      function: list_all_posts,
+      functionArguments: [],
     },
   });
   return response[0];

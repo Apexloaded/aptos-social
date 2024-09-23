@@ -29,8 +29,11 @@ import { Path } from '@/config/session.enum';
 import ShortUniqueId from 'short-unique-id';
 import Image from 'next/image';
 import { PinResponse } from 'pinata-web3';
-import { IPFS_URL } from '@/config/constants';
+import { IPFS_URL, DEFAULT_COLLECTION } from '@/config/constants';
 import { renameFile } from '@/utils/helpers';
+import { createCollection } from '@/aptos/entry/feeds.entry';
+import { InputGenerateTransactionPayloadData } from '@aptos-labs/ts-sdk';
+import { uploadFile } from '@/actions/pinata.action';
 
 function Welcome() {
   const aptosWallet = useWallet();
@@ -49,7 +52,12 @@ function Welcome() {
   const username = watch('username');
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const { error, success, loading, updateLoading } = useToast();
-  const { account, signAndSubmitTransaction } = useAccount();
+  const {
+    account,
+    signAndSubmitTransaction,
+    address,
+    signAndSubmitBatchTransaction,
+  } = useAccount();
 
   const checkUsername = useCallback(
     debounce(async (username) => {
@@ -75,7 +83,7 @@ function Welcome() {
 
   const proceed = async (data: FieldValues) => {
     try {
-      if (!mediaFile) return;
+      if (!mediaFile || !address) return;
       loading({ msg: 'Processing...' });
 
       const file = renameFile(mediaFile);
@@ -83,36 +91,65 @@ function Welcome() {
       formData.append('file', file);
 
       updateLoading({ msg: 'Uploading profile image...' });
-      const fileUpload = await fetch('/api/upload/file', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await fileUpload.json();
-      const { IpfsHash } = data as PinResponse;
+      const fileRes = await uploadFile(formData);
+      if (!fileRes.status) {
+        return error({ msg: fileRes.message || 'Error uploading file' });
+      }
+      const { IpfsHash } = fileRes.data as PinResponse;
       const pfpUrl = `https://${IpfsHash}.${IPFS_URL}`;
 
       updateLoading({ msg: 'Creating profile...' });
-      const response = await signAndSubmitTransaction(
-        registerCreator({
-          name: data.name,
-          email: data.email,
-          username: data.username,
-          pfp: pfpUrl,
-        })
-      );
+      const registerTx = registerCreator({
+        name: data.name,
+        email: data.email,
+        username: data.username,
+        pfp: pfpUrl,
+      }).data;
+      const collectionUrl = `https://${DEFAULT_COLLECTION}.${IPFS_URL}`;
+      const createColTx = createCollection({
+        name: 'Aptos Social Feeds',
+        description: 'This is the default collection for aptos social feeds',
+        max_supply: 100000,
+        custom_id: `${address}-social-feeds`,
+        royalty_percentage: 1,
+        logo_img: `${collectionUrl}/logo.png`,
+        banner_img: `${collectionUrl}/banner.jpg`,
+        featured_img: `${collectionUrl}/feature.jpg`,
+      }).data;
 
-      if (response) {
-        const committedTransactionResponse =
-          await aptosClient().waitForTransaction({
-            transactionHash: response.hash,
-          });
+      console.log(registerTx);
+      console.log(createColTx);
 
-        if (committedTransactionResponse.success) {
-          await completeOnboarding(`${account?.accountAddress.toString()}`);
-          success({ msg: 'Profile was successfully created' });
-          router.push(routes.app.home);
-        }
-      }
+      const batchTxRes = await signAndSubmitBatchTransaction([
+        registerTx,
+        createColTx,
+      ]);
+
+      console.log(batchTxRes);
+      await completeOnboarding(`${account?.accountAddress.toString()}`);
+      success({ msg: 'Profile was successfully created' });
+      router.push(routes.app.home);
+      // const response = await signAndSubmitTransaction(
+      //   registerCreator({
+      //     name: data.name,
+      //     email: data.email,
+      //     username: data.username,
+      //     pfp: pfpUrl,
+      //   })
+      // );
+
+      // if (response) {
+      //   const committedTransactionResponse =
+      //     await aptosClient().waitForTransaction({
+      //       transactionHash: response.hash,
+      //     });
+
+      //   if (committedTransactionResponse.success) {
+      //     await completeOnboarding(`${account?.accountAddress.toString()}`);
+      //     success({ msg: 'Profile was successfully created' });
+      //     router.push(routes.app.home);
+      //   }
+      // }
     } catch (err: any) {
       console.log(err);
       // const msg = getError(err);

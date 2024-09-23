@@ -23,6 +23,11 @@ export default function GoogleConnect() {
   const { generateKeyPair, getKeyPair } = useEphemeral();
 
   useEffect(() => {
+    router.prefetch(routes.app.home);
+    router.prefetch(routes.app.welcome);
+  }, [router]);
+
+  useEffect(() => {
     const updateScreenSize = () => {
       setScreenSize({
         width: window.screen.width,

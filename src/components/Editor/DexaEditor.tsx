@@ -3,17 +3,18 @@ import React, {
   useState,
   useImperativeHandle,
   ForwardedRef,
-} from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import { defaultEditorProps } from "./props";
-import { defaultExtensions } from "./extensions";
-import { MenuBar } from "./menus/MenuBar";
-import { countWords } from "@/utils/helpers";
-import Placeholder from "@tiptap/extension-placeholder";
+} from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import { defaultEditorProps } from './props';
+import { defaultExtensions } from './extensions';
+import { MenuBar } from './menus/MenuBar';
+import { countWords } from '@/utils/helpers';
+import Placeholder from '@tiptap/extension-placeholder';
 
 export interface DexaEditorHandle {
   clearEditor: () => void;
   focus: () => void;
+  setValue: (value?: string) => void;
 }
 
 type Props = {
@@ -43,7 +44,7 @@ const DexaEditor = React.forwardRef(
         ...defaultExtensions,
         Placeholder.configure({
           placeholder: ({ node }) => {
-            if (node.type.name === "heading") {
+            if (node.type.name === 'heading') {
               return `Heading ${node.attrs.level}`;
             }
             return placeholder;
@@ -71,6 +72,13 @@ const DexaEditor = React.forwardRef(
       focus: () => {
         if (editor) {
           editor.chain().focus().run();
+        }
+      },
+      setValue: (value?: string) => {
+        if (editor && value) {
+          editor.commands.setContent(value);
+          const words = countWords(value);
+          onWordCount(words);
         }
       },
     }));
@@ -105,5 +113,5 @@ const DexaEditor = React.forwardRef(
     );
   }
 );
-DexaEditor.displayName = "DexaEditor";
+DexaEditor.displayName = 'DexaEditor';
 export default DexaEditor;

@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react';
 import {
   Account,
   EphemeralKeyPair,
+  ExecutionFinishEventData,
+  InputGenerateTransactionPayloadData,
   KeylessAccount,
   PendingTransactionResponse,
+  TransactionWorkerEventsEnum,
 } from '@aptos-labs/ts-sdk';
 import { aptosClient } from '@/utils/aptosClient';
 import useStorage from './storage.hook';
@@ -108,6 +111,37 @@ export default function useKeylessAccount() {
     }
   };
 
+  const signAndSubmitBatchTransaction = async (
+    transactions: InputGenerateTransactionPayloadData[]
+  ): Promise<ExecutionFinishEventData | unknown> => {
+    if (account) {
+      const aptos = aptosClient();
+      const totalTx = transactions.length;
+      const sequence_number = `${(totalTx * 1) / 2}`;
+
+      aptos.transaction.batch.forSingleAccount({
+        sender: account,
+        data: transactions,
+      });
+      return new Promise((resolve, reject) => {
+        aptos.transaction.batch.on(
+          TransactionWorkerEventsEnum.ExecutionFinish,
+          async (data) => {
+            const accountData = await aptos.getAccountInfo({
+              accountAddress: account.accountAddress.toString(),
+            });
+            if ((accountData.sequence_number = sequence_number)) {
+              resolve(data);
+            } else {
+              reject();
+            }
+            aptos.transaction.batch.removeAllListeners();
+          }
+        );
+      });
+    }
+  };
+
   return {
     createAccount,
     account,
@@ -115,5 +149,6 @@ export default function useKeylessAccount() {
     connected,
     disconnect,
     address,
+    signAndSubmitBatchTransaction,
   };
 }

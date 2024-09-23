@@ -29,4 +29,7 @@ export const get_metadata: `${string}::${string}::${string}` = `${AccountAddress
 export const mint_post: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${feeds}::mint_post`;
+export const list_all_posts: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::list_all_posts`;
 
