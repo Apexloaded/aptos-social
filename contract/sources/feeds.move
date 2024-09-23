@@ -324,6 +324,65 @@ module aptos_social_host::aptos_social_feeds {
         });
     }
 
+    public entry fun add_comment(
+        account: &signer,
+        pid: u64,
+        comment: String
+    ) acquires AptosSocialFeedState {
+        let sender_address = signer::address_of(account);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        assert!(table::contains(&state.post_item, pid), ERROR_NOT_FOUND);
+        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+        assert!(string::length(&comment) > 0, ERROR_INVALID_STRING);
+
+        let post_id = state.post_count + 1;
+
+        let parent_post = table::borrow_mut(&mut state.post_item, pid);
+        parent_post.comment_count = parent_post.comment_count + 1;
+
+        let hashtags = aptos_social_utils::extract_hashtags(&comment);
+        let child_post = Post {
+            id: post_id,
+            author: sender_address,
+            content: comment,
+            price: 0,
+            collector: @0x0,
+            tip_count: 0,
+            media: vector::empty<Media>(),
+            metadata_uri: string::utf8(b""),
+            token_obj: parent_post.token_obj,
+            created_at: timestamp::now_seconds(),
+            is_collectible: true,
+            liked_by: vector::empty(),
+            parent_id: pid,
+            hashtag: hashtags,
+            comment_count: 0,
+            is_comment: true,
+        };
+
+        // Add the child post to the global state
+        vector::push_back(&mut state.posts, child_post);
+        table::add(&mut state.post_item, post_id, child_post);
+        state.post_count = post_id;
+
+        // Add the child post (comment) to the post_comments table
+        if (table::contains(&state.post_comments, pid)) {
+            let comments = *table::borrow_mut(&mut state.post_comments, pid);
+            vector::push_back(&mut comments, child_post);
+        } else {
+            let new_comments = vector::empty<Post>();
+            vector::push_back(&mut new_comments, child_post);
+            table::add(&mut state.post_comments, pid, new_comments);
+        };
+
+        // Emit post created event
+        event::emit(PostCreatedEvent {
+            post_id,
+            author: sender_address,
+            timestamp: timestamp::now_seconds(),
+        });
+    }
+
     /****************************************************************
      * APTOS SOCIAL FEED INTERNAL FUNCTIONS
      ****************************************************************/
@@ -481,6 +540,24 @@ module aptos_social_host::aptos_social_feeds {
         let state = borrow_global<AptosSocialFeedState>(@aptos_social_host);
         let post = *table::borrow(&state.post_item, post_id);
         generate_post_data(post)
+    }
+
+    #[view]
+    public fun get_comments(post_id: u64): vector<PostItem> acquires AptosSocialFeedState {
+        let state = borrow_global<AptosSocialFeedState>(@aptos_social_host);
+        let comment_array = *table::borrow(&state.post_comments, post_id);
+        let comments = vector::empty<PostItem>();
+        let length = vector::length(&comment_array);
+        let i = 0;
+        while (i < length) {
+            let comment = *vector::borrow(&comment_array, i);
+            if(comment.is_comment == true) {
+                let comment_item = generate_post_data(comment);
+                vector::push_back(&mut comments, comment_item);
+            };
+            i = i + 1;
+        };
+        comments
     }
 
     #[view]
