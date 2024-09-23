@@ -13,17 +13,18 @@ import FileSelector from '../ui/fileselector';
 import ShowError from '../ui/inputerror';
 import MediaPreview from '../Posts/MediaPreview';
 import { Input } from '../ui/input';
-import { HOSTNAME } from '@/config/constants';
+import { HOSTNAME, IPFS_URL } from '@/config/constants';
 import { TextArea } from '../ui/textarea';
 import { Label } from '../ui/label';
 import { addCollectionResolver } from '@/schemas/collection.schema';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
-import { checkIfFund, uploadFolder } from '@/utils/Irys';
 import { createCollection } from '@/aptos/entry/feeds.entry';
 import { aptosClient } from '@/utils/aptosClient';
 import useToast from '@/hooks/toast.hook';
 import { routes } from '@/routes';
 import { useRouter } from 'next/navigation';
+import { useAccount } from '@/context/account.context';
+import { IUploadFilesResponse } from '@/interfaces/response.interface';
 
 const links = [
   {
@@ -66,8 +67,7 @@ export default function CreateCollection() {
   const bannerRef = useRef<HTMLInputElement>(null);
   const urlRef = useRef<HTMLInputElement>(null);
 
-  const aptosWallet = useWallet();
-  const { account, wallet, signAndSubmitTransaction } = useWallet();
+  const { signAndSubmitTransaction } = useAccount();
   const { error, success, loading, updateLoading } = useToast();
 
   const [logoImage, setLogoImage] = useState<File | null>(null);
@@ -87,31 +87,49 @@ export default function CreateCollection() {
 
   const onSubmit = async (data: FieldValues) => {
     loading({ msg: 'Processing...' });
+    const formData = new FormData();
     const originalFiles: File[] = [data.logo, data.featured, data.banner];
     const files = renameFiles(originalFiles);
+    Array.from(files).forEach((file) => {
+      formData.append('files', file);
+    });
     updateLoading({ msg: 'Uploading profile images...' });
-    const funded = await checkIfFund(aptosWallet, 0, true, files);
-    if (funded) {
-      try {
-        let imageFolderReceipt = await uploadFolder(aptosWallet, files);
-        updateLoading({ msg: 'Creating collection...' });
-        const logo_img = `${imageFolderReceipt}/${originalFiles[0].name}`;
-        const featured_img = `${imageFolderReceipt}/${originalFiles[1].name}`;
-        const banner_img = `${imageFolderReceipt}/${originalFiles[2].name}`;
-        const { name, max_supply, custom_id, description, royalty } = data;
-        const response = await signAndSubmitTransaction(
-          createCollection({
-            name,
-            description,
-            max_supply,
-            custom_id,
-            royalty_percentage: royalty,
-            logo_img,
-            banner_img,
-            featured_img,
-          })
-        );
+    try {
+      const fileUpload = await fetch('/api/upload/files', {
+        method: 'POST',
+        body: formData,
+      });
+      const uploadRes = await fileUpload.json();
+      const { pinned, metadata } = uploadRes.data as IUploadFilesResponse;
+      const pfpUrl = `https://${pinned.IpfsHash}.${IPFS_URL}`;
 
+      updateLoading({ msg: 'Creating collection...' });
+      const logo_img = `${pfpUrl}/${
+        metadata.find((m) => m.id == files[0].name)?.fileName
+      }`;
+      const featured_img = `${pfpUrl}/${
+        metadata.find((m) => m.id == files[1].name)?.fileName
+      }`;
+      const banner_img = `${pfpUrl}/${
+        metadata.find((m) => m.id == files[2].name)?.fileName
+      }`;
+      const { name, max_supply, custom_id, description, royalty } = data;
+      const response = await signAndSubmitTransaction(
+        createCollection({
+          name,
+          description,
+          max_supply,
+          custom_id,
+          royalty_percentage: royalty,
+          logo_img,
+          banner_img,
+          featured_img,
+        })
+      );
+
+      console.log(response);
+
+      if (response) {
         // Wait for the transaction to be commited to chain
         const committedTransactionResponse =
           await aptosClient().waitForTransaction({
@@ -123,16 +141,12 @@ export default function CreateCollection() {
           success({ msg: 'Profile was successfully created' });
           router.push(routes.app.collections.index);
         }
-      } catch (error: any) {
-        throw new Error(
-          `Error uploading collection image and NFT images ${error}`
-        );
       }
+    } catch (err: any) {
+      console.log(err);
+      error({ msg: 'Error uploading profile images' });
+      throw new Error(`Error uploading collection image and NFT images ${err}`);
     }
-
-    console.log(data);
-    console.log(files);
-    // https://gateway.irys.xyz/7k6SuFS7Xjo79RfWCDpmdjwrYySwztrhgmtB8ZLrJ-o
   };
 
   const renameFiles = (files: File[]): File[] => {
@@ -402,7 +416,9 @@ export default function CreateCollection() {
               </div>
             </div>
             {isAvailable == null && custom_id?.length > 0 && (
-              <p className="text-dark/60 font text-sm">Checking...</p>
+              <p className="text-dark/60 dark:text-white font text-sm">
+                Checking...
+              </p>
             )}
             {isAvailable == false && custom_id?.length > 0 && (
               <div className="flex items-center gap-1">
@@ -435,7 +451,7 @@ export default function CreateCollection() {
                   rows={5}
                   onChange={onChange}
                   placeholder="Collection's description"
-                  className="border border-input outline-none mt-1 dark:bg-dark"
+                  className="border border-input outline-none mt-1 dark:bg-dark dark:text-white"
                 ></TextArea>
               )}
               name="description"

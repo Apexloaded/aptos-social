@@ -11,15 +11,18 @@ import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { aptosClient } from '@/utils/aptosClient';
 import { AccountAddress, GetCollectionDataResponse } from '@aptos-labs/ts-sdk';
 import { ICollection } from '@/interfaces/collection.interface';
+import { useAccount } from '@/context/account.context';
 
 export default function useCollections() {
   const [collections, setCollections] = useState<Array<ICollection>>([]);
-  const { account, connected } = useWallet();
+  const { account, connected, address } = useAccount();
+
+  const isReady = connected && address !== undefined;
 
   const { data } = useQuery({
-    queryKey: [QueryKeys.Collections],
-    queryFn: async () => getAllCollections(`${account?.address}`),
-    enabled: connected,
+    queryKey: [QueryKeys.Collections, address],
+    queryFn: async () => getAllCollections(`${address}`),
+    enabled: isReady,
   });
 
   useEffect(() => {

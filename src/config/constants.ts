@@ -13,3 +13,7 @@ export const PINATA_GATEWAY = process.env.NEXT_PRIVATE_PINATA_GATEWAY || '';
 export const PINATA_GATEWAY_KEY =
   process.env.NEXT_PRIVATE_PINATA_GATEWAY_KEY || '';
 export const IPFS_URL = process.env.NEXT_PUBLIC_IPFS_URL || 'ipfs.dweb.link';
+
+export const OPENAI_API_KEY = process.env.NEXT_PRIVATE_OPENAI_API_KEY;
+export const OPENAI_ORG_ID = process.env.NEXT_PRIVATE_OPENAI_ORG_ID;
+export const OPENAI_PROJECT_ID = process.env.NEXT_PRIVATE_OPENAI_PROJECT_ID;

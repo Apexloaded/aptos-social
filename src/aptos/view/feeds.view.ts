@@ -31,5 +31,3 @@ export const getCollectionMetadata = async (
   });
   return response[0];
 };
-
-

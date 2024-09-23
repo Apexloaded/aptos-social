@@ -14,6 +14,7 @@
     "move:upgrade": "node ./scripts/move/upgrade"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^0.0.61",
     "@aptos-labs/ts-sdk": "^1.27.1",
     "@aptos-labs/wallet-adapter-react": "^3.6.2",
     "@headlessui/react": "^2.1.5",
@@ -31,6 +32,7 @@
     "@tiptap/extension-placeholder": "^2.3.0",
     "@tiptap/react": "^2.3.0",
     "@tiptap/starter-kit": "^2.3.0",
+    "ai": "^3.4.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "debounce": "^2.1.1",
@@ -42,6 +44,7 @@
     "next": "14.2.8",
     "next-auth": "^5.0.0-beta.20",
     "next-nprogress-bar": "^2.3.13",
+    "openai": "^4.63.0",
     "pinata-web3": "^0.4.1",
     "react": "^18",
     "react-dom": "^18",

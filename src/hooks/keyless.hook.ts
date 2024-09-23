@@ -16,6 +16,7 @@ import useEphemeral from './ephemeral.hook';
 
 export default function useKeylessAccount() {
   const [account, setAccount] = useState<KeylessAccount>();
+  const [address, setAddress] = useState<`0x${string}`>();
   const [connected, setConnected] = useState<boolean>(false);
   const { removeAllPairs } = useEphemeral();
 
@@ -24,6 +25,7 @@ export default function useKeylessAccount() {
       const keylessAccount = getKeylessAccount();
       if (keylessAccount) {
         setAccount(keylessAccount);
+        setAddress(keylessAccount?.accountAddress.toString());
         setConnected(true);
       }
     };
@@ -92,12 +94,16 @@ export default function useKeylessAccount() {
     if (account) {
       const aptos = aptosClient();
       const tx = await aptos.transaction.build.simple({
-        sender: account.accountAddress,
+        sender: account.accountAddress.toString(),
         data: payload.data,
       });
-      return await aptos.signAndSubmitTransaction({
+      const signedTx = aptos.transaction.sign({
         signer: account,
         transaction: tx,
+      });
+      return await aptos.transaction.submit.simple({
+        transaction: tx,
+        senderAuthenticator: signedTx,
       });
     }
   };
@@ -108,5 +114,6 @@ export default function useKeylessAccount() {
     signAndSubmitTransaction,
     connected,
     disconnect,
+    address,
   };
 }

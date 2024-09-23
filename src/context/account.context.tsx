@@ -21,6 +21,7 @@ interface AccountContextType {
   ) => Promise<PendingTransactionResponse | undefined>;
   connected: boolean;
   disconnect: () => void;
+  address?: `0x${string}`;
 }
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);

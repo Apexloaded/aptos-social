@@ -1,4 +1,4 @@
-import { aptosClient } from "./aptosClient";
+import { aptosClient } from './aptosClient';
 
 export const APT_DECIMALS = 8;
 
@@ -17,8 +17,8 @@ export const convertAmountFromOnChainToHumanReadable = (
 };
 
 export const getFirstLetters = (fullName: string) => {
-  const words = fullName.split(" ");
-  let initials = "";
+  const words = fullName.split(' ');
+  let initials = '';
   for (const word of words) {
     const firstLetter = word[0]?.toUpperCase();
     if (firstLetter) {
@@ -31,8 +31,8 @@ export const getFirstLetters = (fullName: string) => {
 export const countWords = (sentence: string) => {
   const trimmedSentence = sentence.trim();
   const wordsArray = trimmedSentence.split(/\s+/);
-  const nonEmptyWordsArray = wordsArray.filter((word) => word !== "");
-  const length = trimmedSentence === "" ? 0 : nonEmptyWordsArray.length;
+  const nonEmptyWordsArray = wordsArray.filter((word) => word !== '');
+  const length = trimmedSentence === '' ? 0 : nonEmptyWordsArray.length;
   return length;
 };
 
@@ -46,8 +46,8 @@ export function formatWalletAddress(
   startAt?: number,
   endAt?: number
 ) {
-  if (typeof walletAddress !== "string" || walletAddress.length < 6) {
-    return "Invalid wallet address";
+  if (typeof walletAddress !== 'string' || walletAddress.length < 6) {
+    return 'Invalid wallet address';
   }
 
   const prefix = startAt
@@ -56,12 +56,20 @@ export function formatWalletAddress(
   const suffix = endAt
     ? walletAddress.substring(walletAddress.length - endAt)
     : walletAddress.substring(walletAddress.length - 4);
-  const div = separator ? separator : "...";
+  const div = separator ? separator : '...';
 
   return `${prefix}${div}${suffix}`;
 }
 
 export const isValidAptosAddress = (address: string) => {
   const hexRegex = /^[0-9a-fA-F]{64}$/;
-  return typeof address === "string" && hexRegex.test(address);
+  return typeof address === 'string' && hexRegex.test(address);
+};
+
+export const renameFile = (file: File) => {
+  const extension = file.name.split('.').pop();
+  const newName = `${Date.now()}-${Math.floor(
+    Math.random() * 10000
+  )}.${extension}`;
+  return new File([file], newName, { type: file.type });
 };

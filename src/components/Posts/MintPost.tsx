@@ -25,19 +25,29 @@ import { routes } from '@/routes';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { mintPost } from '@/aptos/entry/feeds.entry';
+import useCollections from '@/hooks/collections.hook';
+import { useAccount } from '@/context/account.context';
+import { IUploadFilesResponse } from '@/interfaces/response.interface';
+import { IPFS_URL } from '@/config/constants';
+import { useOpenAI } from '@/hooks/openai.hook';
+import { generateText } from '@/actions/openai.action';
+import { readStreamableValue } from 'ai/rsc';
 
 export function MintPost() {
   const router = useRouter();
   const editorRef = useRef<DexaEditorHandle>(null);
   const mediaRef = useRef<HTMLInputElement>(null);
   const aptosWallet = useWallet();
-  const { signAndSubmitTransaction } = useWallet();
+  const { signAndSubmitTransaction } = useAccount();
+  const { collections } = useCollections();
   const [maxWord] = useState(70);
   const [isOpen, setIsOpen] = useState(false);
   const [percentage, setPercentage] = useState(0);
   const [exceededCount, setExceededCount] = useState(0);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const { error, loading, updateLoading, success } = useToast();
+  const { sendPrompt } = useOpenAI();
+  const [generation, setGeneration] = useState<string>('');
   const {
     reset,
     control,
@@ -80,13 +90,58 @@ export function MintPost() {
     if (mediaRef.current) mediaRef.current.value = '';
   };
 
+  const onAiInit = async () => {
+    if (!mediaFile) return;
+    const formdata = new FormData();
+    formdata.append('image', mediaFile);
+    const { output } = await generateText(
+      'Generate a very short captivating story behind this NFT image',
+      formdata
+    );
+
+    for await (const delta of readStreamableValue(output)) {
+      setValue('content', `${delta}`);
+      setGeneration((currentGeneration) => `${currentGeneration}${delta}`);
+    }
+  };
+
   const onSubmit = async (data: FieldValues) => {
     try {
       if (!mediaFile) return;
       loading({ msg: 'Processing...' });
 
+      const nftMetadata = {
+        description: 'Bear 1 in collection',
+        image: 'to_fill_after_upload',
+        name: 'bear 1',
+        external_url: 'https://your_project_url.io/1',
+        attributes: [
+          {
+            trait_type: 'bear_level',
+            value: '1',
+          },
+        ],
+      };
+
+      const formData = new FormData();
+      formData.append('files', mediaFile);
+      const fileUpload = await fetch('/api/upload/files', {
+        method: 'POST',
+        body: formData,
+      });
+      const uploadRes = await fileUpload.json();
+      const { pinned, metadata } = uploadRes.data as IUploadFilesResponse;
+      const pfpUrl = `https://${pinned.IpfsHash}.${IPFS_URL}`;
+
       const media_urls = [''];
       const media_mimetypes = [''];
+
+      metadata.map((m) => {
+        if (m.id == mediaFile.name) {
+          media_urls.push(`${pfpUrl}/${m.fileName}`);
+          media_mimetypes.push(m.contentType);
+        }
+      });
       const metadata_uri = '';
       const collection_obj = '';
 
@@ -94,7 +149,7 @@ export function MintPost() {
       const response = await signAndSubmitTransaction(
         mintPost({
           content,
-          price: 0,
+          price: 1,
           media_urls,
           media_mimetypes,
           metadata_uri,
@@ -102,17 +157,17 @@ export function MintPost() {
         })
       );
 
-      // Wait for the transaction to be commited to chain
-      const committedTransactionResponse =
-        await aptosClient().waitForTransaction({
-          transactionHash: response.hash,
-        });
+      if (response) {
+        const committedTransactionResponse =
+          await aptosClient().waitForTransaction({
+            transactionHash: response.hash,
+          });
 
-      // Once the transaction has been successfully commited to chain, navigate to the `my-assets` page
-      if (committedTransactionResponse.success) {
-        success({ msg: 'Profile was successfully created' });
-        close();
-        router.push(routes.app.home);
+        if (committedTransactionResponse.success) {
+          success({ msg: 'Post minted successfully' });
+          close();
+          router.push(routes.app.home);
+        }
       }
     } catch (err: any) {
       // const msg = getError(err);
@@ -165,6 +220,7 @@ export function MintPost() {
                     name={'content'}
                   />
                 </div>
+                {generation}
               </div>
               <div className="flex items-center justify-between border-t border-light pt-[0.8rem]">
                 <div className="flex items-center">
@@ -226,6 +282,14 @@ export function MintPost() {
                     className="rounded-full"
                   >
                     <p className="text-sm font-semibold">{'Mint'}</p>
+                  </Button>
+                  <Button
+                    onClick={onAiInit}
+                    type={'button'}
+                    size={'default'}
+                    className="rounded-full"
+                  >
+                    <p className="text-sm font-semibold">{'AI'}</p>
                   </Button>
                 </div>
               </div>

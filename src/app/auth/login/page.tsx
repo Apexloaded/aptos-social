@@ -31,8 +31,8 @@ export default function Login() {
           <AptosSocialLogo />
         </div>
         <div className="text-center py-4 mb-5">
-          <p className="text-2xl font-semibold">Connect your wallet</p>
-          <p className="text-medium">
+          <p className="text-2xl font-semibold dark:text-white">Connect your wallet</p>
+          <p className="text-medium dark:text-white">
             Seamlessly signup or login to your account using your favourite
             wallet
           </p>

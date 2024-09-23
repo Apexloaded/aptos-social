@@ -21,7 +21,6 @@ function useCreator() {
 
   useEffect(() => {
     if (data) setUser(data);
-    console.log(data);
   }, [data]);
 
   const logout = async () => {

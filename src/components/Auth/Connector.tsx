@@ -21,7 +21,7 @@ export function Connector({ connector }: ConnectorProps) {
       <div className="flex items-center w-full gap-4">
         <div className="flex-1 items-center flex gap-1">
           <connector.icon />
-          <p className="text-base font-normal">{connector.name}</p>
+          <p className="text-base font-normal dark:text-white">{connector.name}</p>
         </div>
       </div>
     </div>
