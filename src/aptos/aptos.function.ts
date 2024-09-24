@@ -32,4 +32,19 @@ export const mint_post: `${string}::${string}::${string}` = `${AccountAddress.fr
 export const list_all_posts: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${feeds}::list_all_posts`;
+export const get_post_by_id: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::get_post_by_id`;
+export const add_comment: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::add_comment`;
+export const get_comments: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::get_comments`;
+export const like: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::like`;
+export const unlike: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::unlike`;
 

@@ -1,13 +1,17 @@
 import { InputTransactionData } from '@aptos-labs/wallet-adapter-react';
-import { create_collection, mint_post } from '../aptos.function';
+import {
+  add_comment,
+  create_collection,
+  like,
+  mint_post,
+  unlike,
+} from '../aptos.function';
 import { INewCollection } from '@/interfaces/collection.interface';
-import { INewPost } from '@/interfaces/feed.interface';
-import { U64 } from '@aptos-labs/ts-sdk';
+import { IAddComment, INewPost } from '@/interfaces/feed.interface';
 
 export const createCollection = (
   args: INewCollection
 ): InputTransactionData => {
-  console.log(args);
   const {
     name,
     description,
@@ -45,7 +49,6 @@ export const mintPost = (args: INewPost): InputTransactionData => {
     metadata_uri,
     collection_obj,
   } = args;
-  console.log(args);
   return {
     data: {
       function: mint_post,
@@ -58,6 +61,37 @@ export const mintPost = (args: INewPost): InputTransactionData => {
         metadata_uri,
         collection_obj,
       ],
+    },
+  };
+};
+
+export const addComment = (args: IAddComment): InputTransactionData => {
+  const { post_id, comment } = args;
+  return {
+    data: {
+      function: add_comment,
+      typeArguments: [],
+      functionArguments: [post_id, comment],
+    },
+  };
+};
+
+export const likePost = (post_id: number): InputTransactionData => {
+  return {
+    data: {
+      function: like,
+      typeArguments: [],
+      functionArguments: [post_id],
+    },
+  };
+};
+
+export const unlikePost = (post_id: number): InputTransactionData => {
+  return {
+    data: {
+      function: unlike,
+      typeArguments: [],
+      functionArguments: [post_id],
     },
   };
 };

@@ -6,10 +6,10 @@ export interface IMediaType {
 }
 
 export interface IPost {
-  id: string;
+  id: number;
   author: string;
   collector: string;
-  token_obj: {inner: string};
+  token_obj: { inner: string };
   content: string;
   created_at: string;
   metadata_uri: string;
@@ -22,6 +22,8 @@ export interface IPost {
   parent_id: string;
   comment_count: number;
   is_comment: boolean;
+  down_votes: string[];
+  up_votes: string[];
 }
 
 export interface IPostItem {
@@ -36,4 +38,9 @@ export interface INewPost {
   media_mimetypes: Array<string>;
   metadata_uri: string;
   collection_obj: string;
+}
+
+export interface IAddComment {
+  post_id: number;
+  comment: string;
 }

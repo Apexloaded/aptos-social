@@ -1,17 +1,23 @@
-import { IPost } from "@/interfaces/feed.interface";
-import { CommentButton } from "./Buttons/CommentButton";
-import { LikeButton } from "./Buttons/LikeButton";
-import { ShareButton } from "./Buttons/ShareButton";
+import { IPost } from '@/interfaces/feed.interface';
+import { CommentButton } from './Buttons/CommentButton';
+import { LikeButton } from './Buttons/LikeButton';
+import { ShareButton } from './Buttons/ShareButton';
+import { UserInterface } from '@/interfaces/user.interface';
+import { UpvoteButton } from './Buttons/UpvoteButton';
+import { DownvoteButton } from './Buttons/DownvoteButton';
 
 export interface ButtonProps {
   post: IPost;
+  creator: UserInterface;
 }
-export function PostButtons({ post }: ButtonProps) {
+export function PostButtons({ post, creator }: ButtonProps) {
   return (
     <div className="flex items-center space-x-4">
-      <LikeButton post={post} />
-      <CommentButton post={post} />
-      <ShareButton post={post} />
+      <LikeButton post={post} creator={creator} />
+      <UpvoteButton post={post} creator={creator} />
+      <DownvoteButton post={post} creator={creator} />
+      <CommentButton post={post} creator={creator} />
+      <ShareButton post={post} creator={creator} />
     </div>
   );
 }

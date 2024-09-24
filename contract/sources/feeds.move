@@ -38,7 +38,7 @@ module aptos_social_host::aptos_social_feeds {
         mimetype: String,
     }
 
-    struct PostItem has key, store {
+    struct PostItem has key, store, drop {
         creator: Creator,
         post: Post,
     }
@@ -310,6 +310,8 @@ module aptos_social_host::aptos_social_feeds {
             hashtag: hashtags,
             comment_count: 0,
             is_comment: false,
+            upvotes: vector::empty(),
+            downvotes: vector::empty(),
         };
 
         vector::push_back(&mut state.posts, post);
@@ -365,14 +367,15 @@ module aptos_social_host::aptos_social_feeds {
         table::add(&mut state.post_item, post_id, child_post);
         state.post_count = post_id;
 
-        // Add the child post (comment) to the post_comments table
-        if (table::contains(&state.post_comments, pid)) {
-            let comments = *table::borrow_mut(&mut state.post_comments, pid);
-            vector::push_back(&mut comments, child_post);
+        // Update the post_comments table
+        if(!table::contains(&state.post_comments, pid)) {
+            let new_comment = vector::empty<Post>();
+            vector::push_back(&mut new_comment, child_post);
+            table::add(&mut state.post_comments,pid, new_comment);
         } else {
-            let new_comments = vector::empty<Post>();
-            vector::push_back(&mut new_comments, child_post);
-            table::add(&mut state.post_comments, pid, new_comments);
+            let cc = *table::borrow_mut(&mut state.post_comments, pid);
+            vector::push_back(&mut cc, child_post);
+            table::upsert(&mut state.post_comments, pid, cc);
         };
 
         // Emit post created event
@@ -381,6 +384,38 @@ module aptos_social_host::aptos_social_feeds {
             author: sender_address,
             timestamp: timestamp::now_seconds(),
         });
+    }
+
+    public entry fun like(account: &signer, post_id: u64) acquires AptosSocialFeedState {
+        let sender_address = signer::address_of(account);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
+        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+        
+        let post = table::borrow_mut(&mut state.post_item, post_id);
+
+        assert!(!vector::contains(&post.liked_by, &sender_address), ERROR_DUPLICATE_RESOURCE);
+        vector::push_back(&mut post.liked_by, sender_address);
+    }
+
+    public entry fun unlike(account: &signer, post_id: u64) acquires AptosSocialFeedState {
+        let sender_address = signer::address_of(account);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
+        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+
+        let post = table::borrow_mut(&mut state.post_item, post_id);
+        let (is_found, index) = vector::index_of(&post.liked_by, &sender_address);
+        assert!(is_found, ERROR_PROCESS_FAILED);
+
+        vector::remove(&mut post.liked_by, index);
+    }
+
+    public entry fun collect_post(account: &signer, post_id: u64) acquires AptosSocialFeedState {
+        let sender_address = signer::address_of(account);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
+        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
     }
 
     /****************************************************************
@@ -525,7 +560,7 @@ module aptos_social_host::aptos_social_feeds {
         let length = vector::length(&posts_array);
         let i = 0;
         while (i < length) {
-            let post = *vector::borrow(&posts_array, i);
+            let post = *table::borrow(&state.post_item, i+1);
             if(post.is_comment == false) {
                 let post_item = generate_post_data(post);
                 vector::push_back(&mut posts, post_item);
@@ -550,11 +585,10 @@ module aptos_social_host::aptos_social_feeds {
         let length = vector::length(&comment_array);
         let i = 0;
         while (i < length) {
-            let comment = *vector::borrow(&comment_array, i);
-            if(comment.is_comment == true) {
-                let comment_item = generate_post_data(comment);
-                vector::push_back(&mut comments, comment_item);
-            };
+            let comment_ref = *vector::borrow(&comment_array, i);
+            let comment = *table::borrow(&state.post_item, comment_ref.id);
+            let comment_item = generate_post_data(comment);
+            vector::push_back(&mut comments, comment_item);
             i = i + 1;
         };
         comments
@@ -563,6 +597,12 @@ module aptos_social_host::aptos_social_feeds {
     #[view]
     public fun create_media(url: String, mimetype: String): Media {
         Media { url, mimetype }
+    }
+
+    #[test_only]
+    public fun get_likes(id: u64): vector<address> acquires AptosSocialFeedState {
+        let postItem = get_post_by_id(id);
+        postItem.post.liked_by
     }
 
     #[test_only]

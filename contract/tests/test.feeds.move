@@ -2,7 +2,7 @@
 module aptos_social_host::feeds_test {
     use std::option;
     use std::signer;
-    use std::string;
+    use std::string::{Self, String};
     use std::vector;
 
     use aptos_std::debug;
@@ -15,7 +15,7 @@ module aptos_social_host::feeds_test {
 
     use aptos_token_objects::collection::{Self, Collection};
     
-    use aptos_social_host::aptos_social_feeds::{Self, Media, CollectionMetadata};
+    use aptos_social_host::aptos_social_feeds::{Self, Media, CollectionMetadata, PostItem};
     use aptos_social_host::profile_test;
 
     #[test(aptos_framework = @0x1, account = @aptos_social_host)]
@@ -102,6 +102,74 @@ module aptos_social_host::feeds_test {
         // let collection_address = object::object_address(collection_1);
 
         aptos_social_feeds::mint_post(account, content, price, media_urls, media_mimetypes, metadata_uri, collection_1);
+    }
+
+    #[test(account = @aptos_social_host, aptos_framework = @0x1, user1 = @0x200, user2 = @0x201)]
+    fun test_comment(
+        account: &signer,
+        aptos_framework: &signer,
+        user1: &signer,
+        user2: &signer
+    ) {
+        let user1_addr = signer::address_of(user1);
+        let user2_addr = signer::address_of(user2);
+
+        test_mint_post(account, aptos_framework, user1, user2);
+
+        // current timestamp is 0 after initialization
+        timestamp::set_time_has_started_for_testing(aptos_framework);
+        account::create_account_for_test(user1_addr);
+        account::create_account_for_test(user2_addr);
+
+        // Comments
+        let comments = vector::empty<String>();
+        let comment1 = string::utf8(b"Hello world");
+        let comment2 = string::utf8(b"This is a second comment");
+        let comment3 = string::utf8(b"Final test comment");
+        vector::push_back(&mut comments, comment1);
+        vector::push_back(&mut comments, comment2);
+        vector::push_back(&mut comments, comment3);
+
+        let i = 0;
+        while(i < 3) {
+            let comment = *vector::borrow(&comments, i);
+            aptos_social_feeds::add_comment(account, 1, comment);
+            i = i + 1;
+        };
+        
+        let post_comments = aptos_social_feeds::get_comments(1);
+        debug::print<vector<PostItem>>(&post_comments);
+        assert!(vector::length(&post_comments) == 3, 1);
+    }
+
+    #[test(account = @aptos_social_host, aptos_framework = @0x1, user1 = @0x200, user2 = @0x201)]
+    fun test_like_unlike(
+        account: &signer,
+        aptos_framework: &signer,
+        user1: &signer,
+        user2: &signer
+    ) {
+        let user1_addr = signer::address_of(user1);
+        let user2_addr = signer::address_of(user2);
+
+        test_mint_post(account, aptos_framework, user1, user2);
+
+        // current timestamp is 0 after initialization
+        timestamp::set_time_has_started_for_testing(aptos_framework);
+        account::create_account_for_test(user1_addr);
+        account::create_account_for_test(user2_addr);
+
+        aptos_social_feeds::like(account, 1);
+
+        let likes = aptos_social_feeds::get_likes(1);
+
+        assert!(vector::contains(&likes, &signer::address_of(account)), 300);
+
+        aptos_social_feeds::unlike(account, 1);
+
+        let unliked = aptos_social_feeds::get_likes(1);
+
+        assert!(vector::length(&unliked) == 0, 2);
     }
 
 }

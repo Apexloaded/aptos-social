@@ -36,11 +36,13 @@ import { PinResponse } from 'pinata-web3';
 import { generate_nft_story_prompt } from '@/lib/prompts';
 import { QueryKeys } from '@/config/query-keys';
 import { queryClient } from '@/providers/ReactQueryProvider';
+import { useAuth } from '@/context/auth.context';
 
 export function MintPost() {
   const router = useRouter();
   const editorRef = useRef<DexaEditorHandle>(null);
   const mediaRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
   const { signAndSubmitTransaction } = useAccount();
   const { collections } = useCollections();
   const [maxWord] = useState(70);
@@ -183,6 +185,8 @@ export function MintPost() {
         if (committedTransactionResponse.success) {
           queryClient.invalidateQueries({ queryKey: [QueryKeys.Posts] });
           success({ msg: 'Post minted successfully' });
+          removeMedia();
+          editorRef.current?.clearEditor();
           close();
           router.push(routes.app.home);
         }
@@ -196,7 +200,7 @@ export function MintPost() {
   return (
     <>
       <Button onClick={open} size="lg" className="w-full font-bold">
-        Mint a Post
+        Tell a Story
       </Button>
 
       <Dialog
@@ -217,7 +221,11 @@ export function MintPost() {
                 </Button>
               </DialogTitle>
               <div className="mt-2 flex items-start space-x-3">
-                <CreatorPFP username={'elonmusk'} name={'Elon Musk'} />
+                <CreatorPFP
+                  username={user?.username}
+                  name={user?.name}
+                  pfp={user?.pfp}
+                />
                 <div className="flex-1 flex flex-col relative">
                   <Controller
                     control={control}

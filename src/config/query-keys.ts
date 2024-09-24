@@ -3,4 +3,6 @@ export enum QueryKeys {
   Collections = 'collections',
   Metadata = 'metadata',
   Posts = 'posts',
+  Comments = 'comments',
+  PostDetails = 'postDetails',
 }

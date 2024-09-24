@@ -13,6 +13,7 @@ export function Posts() {
     queryKey: [QueryKeys.Posts],
     queryFn: async () => {
       const _posts = await getAllPosts();
+      console.log(_posts);
       const sortedPost = sortPostByDate(_posts).filter(
         (p) => !p.post.is_comment
       );
@@ -21,7 +22,7 @@ export function Posts() {
   });
 
   return (
-    <div className="max-w-md mx-auto w-full flex flex-col gap-8">
+    <div className="mx-auto w-full flex flex-col gap-8">
       {data &&
         data.map((post, i) => (
           <PostItem

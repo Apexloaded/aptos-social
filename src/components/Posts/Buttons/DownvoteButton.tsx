@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HeartIcon } from 'lucide-react';
+import { ThumbsDownIcon } from 'lucide-react';
 import { ButtonProps } from '../PostButtons';
 import { useAccount } from '@/context/account.context';
 import { cn } from '@/lib/utils';
@@ -8,30 +8,30 @@ import { aptosClient } from '@/utils/aptosClient';
 import { queryClient } from '@/providers/ReactQueryProvider';
 import { QueryKeys } from '@/config/query-keys';
 
-export function LikeButton({ post }: ButtonProps) {
+export function DownvoteButton({ post }: ButtonProps) {
   const { address, signAndSubmitTransaction } = useAccount();
-  const [isLiked, setIsLiked] = useState(post.liked_by.includes(`${address}`));
-  const [optimisticLikeCount, setOptimisticLikeCount] = useState(
-    post.liked_by.length
+  const [isDownvoted, setIsDownvoted] = useState(post.down_votes.includes(`${address}`));
+  const [optimisticDownvoteCount, setOptimisticDownvoteCount] = useState(
+    post.down_votes.length
   );
   const [isLoading, setIsLoading] = useState(false);
 
-  const toggleLike = async (
+  const initDownvote = async (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>
   ) => {
     e.preventDefault();
     e.stopPropagation();
 
     // Optimistic update
-    setIsLiked(!isLiked);
-    setOptimisticLikeCount((prevCount) =>
-      isLiked ? prevCount - 1 : prevCount + 1
+    setIsDownvoted(!isDownvoted);
+    setOptimisticDownvoteCount((prevCount) =>
+      isDownvoted ? prevCount - 1 : prevCount + 1
     );
     setIsLoading(true);
 
     try {
       let response;
-      if (isLiked) {
+      if (isDownvoted) {
         // Remove like
         response = await signAndSubmitTransaction(unlikePost(post.id));
       } else {
@@ -47,8 +47,8 @@ export function LikeButton({ post }: ButtonProps) {
 
         if (!committedTransactionResponse.success) {
           // If the transaction fails, revert the optimistic update
-          setIsLiked(isLiked);
-          setOptimisticLikeCount(post.liked_by.length);
+          setIsDownvoted(isDownvoted);
+          setOptimisticDownvoteCount(post.liked_by.length);
         } else {
           // Invalidate cache to get fresh data
           queryClient.invalidateQueries({ queryKey: [QueryKeys.Posts] });
@@ -62,8 +62,8 @@ export function LikeButton({ post }: ButtonProps) {
       }
     } catch (error) {
       // Revert optimistic update on error
-      setIsLiked(isLiked);
-      setOptimisticLikeCount(post.liked_by.length);
+      setIsDownvoted(isDownvoted);
+      setOptimisticDownvoteCount(post.liked_by.length);
     } finally {
       setIsLoading(false);
     }
@@ -72,26 +72,26 @@ export function LikeButton({ post }: ButtonProps) {
   return (
     <div
       role="button"
-      onClick={toggleLike}
+      onClick={initDownvote}
       className={cn(
         'flex items-center gap-x-1 group',
         isLoading && 'cursor-wait'
       )}
     >
-      <HeartIcon
+      <ThumbsDownIcon
         size={20}
         className={cn(
           'text-dark dark:text-white group-hover:text-primary',
-          isLiked ? 'fill-primary stroke-primary text-primary' : ''
+          isDownvoted ? 'fill-primary stroke-primary text-primary' : ''
         )}
       />
       <p
         className={cn(
           'text-xs group-hover:text-primary text-dark dark:text-white',
-          isLiked ? 'text-primary' : ''
+          isDownvoted ? 'text-primary' : ''
         )}
       >
-        {optimisticLikeCount > 0 ? optimisticLikeCount : ''}
+        {optimisticDownvoteCount > 0 ? optimisticDownvoteCount : ''}
       </p>
     </div>
   );

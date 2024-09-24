@@ -38,6 +38,7 @@ export default function QuickProfile() {
                   width={400}
                   alt="pfp"
                   className="h-12 w-12"
+                  priority={true}
                 />
               ) : (
                 <div></div>

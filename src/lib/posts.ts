@@ -17,8 +17,9 @@ export const sortPostByDate = (posts: IPostItem[]) => {
 };
 
 export const mapPost = (post: IPost) => {
-  const { created_at, tip_count, comment_count, ...payload } = post;
+  const { created_at, tip_count, comment_count, id, ...payload } = post;
   return {
+    id: Number(id),
     created_at: timestampToDate(post.created_at).toISOString(),
     tip_count: Number(post.tip_count),
     comment_count: Number(post.comment_count),
