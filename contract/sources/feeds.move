@@ -60,6 +60,10 @@ module aptos_social_host::aptos_social_feeds {
         hashtag: vector<String>,
         comment_count: u64,
         is_comment: bool,
+        upvotes: vector<address>,
+        downvotes: vector<address>,
+        hidden: bool,
+        featured: bool,
     }
 
     struct Tips has store {
@@ -312,6 +316,8 @@ module aptos_social_host::aptos_social_feeds {
             is_comment: false,
             upvotes: vector::empty(),
             downvotes: vector::empty(),
+            hidden: false,
+            featured: false
         };
 
         vector::push_back(&mut state.posts, post);
@@ -360,6 +366,10 @@ module aptos_social_host::aptos_social_feeds {
             hashtag: hashtags,
             comment_count: 0,
             is_comment: true,
+            upvotes: vector::empty(),
+            downvotes: vector::empty(),
+            hidden: false,
+            featured: false
         };
 
         // Add the child post to the global state
@@ -416,6 +426,62 @@ module aptos_social_host::aptos_social_feeds {
         let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
         assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+    }
+
+    public entry fun upvote_post(account: &signer, post_id: u64) acquires AptosSocialFeedState { 
+        let sender_address = signer::address_of(account);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
+        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+        
+        let post = table::borrow_mut(&mut state.post_item, post_id);
+
+        // If user has already downvoted, remove the downvote
+        let (downvoted, downvote_index) = vector::index_of(&post.downvotes, &sender_address);
+        if (downvoted) {
+            vector::remove(&mut post.downvotes, downvote_index);
+        };
+
+        // Ensure the user hasn't already upvoted
+        let (upvoted, _) = vector::index_of(&post.upvotes, &sender_address);
+        assert!(!upvoted, ERROR_DUPLICATE_RESOURCE);
+
+        // Add the user's address to the upvotes list
+        vector::push_back(&mut post.upvotes, sender_address);
+
+        let upvotes = vector::length(&post.upvotes);
+        let (upvote_threshold, _) = calculate_threshold(post);
+        if (upvotes >= upvote_threshold) {
+            post.featured = true;
+        }
+    }
+
+    public entry fun downvote_post(account: &signer, post_id: u64) acquires AptosSocialFeedState { 
+        let sender_address = signer::address_of(account);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
+        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+        
+        let post = table::borrow_mut(&mut state.post_item, post_id);
+
+        // If user has already upvoted, remove the downvote
+        let (upvoted, upvote_index) = vector::index_of(&post.upvotes, &sender_address);
+        if (upvoted) {
+            vector::remove(&mut post.upvotes, upvote_index);
+        };
+
+        // Ensure the user hasn't already downvoted
+        let (downvoted, _) = vector::index_of(&post.downvotes, &sender_address);
+        assert!(!downvoted, ERROR_DUPLICATE_RESOURCE);
+
+        // Add the user's address to the downvotes list
+        vector::push_back(&mut post.downvotes, sender_address);
+
+        let downvotes = vector::length(&post.downvotes);
+        let (_, downvote_threshold) = calculate_threshold(post);
+        if (downvotes >= downvote_threshold) {
+            post.hidden = true;
+        }
     }
 
     /****************************************************************
@@ -515,6 +581,33 @@ module aptos_social_host::aptos_social_feeds {
         let creator = aptos_social_profile::find_creator(post.author);
         PostItem {post, creator}
     }
+
+    inline fun calculate_threshold(
+        post: &Post
+    ): (u64, u64) {
+        let base_upvote_threshold = 50;
+        let base_downvote_threshold = 20;
+
+        let upvotes = vector::length(&post.upvotes);
+        let downvotes = vector::length(&post.downvotes);
+        let post_age = timestamp::now_seconds() - post.created_at;
+        let engagement_rate = (upvotes + downvotes) / post_age;
+
+        // Time-based adjustment
+        if (post_age > 72 * 60 * 60) { // more than 72 hours
+            base_upvote_threshold = base_upvote_threshold * 3;
+            base_downvote_threshold = base_downvote_threshold / 2;
+        };
+
+        // Engagement rate adjustment
+        if (engagement_rate > 1) {
+            base_upvote_threshold = base_upvote_threshold / 2; // Easier to feature
+            base_downvote_threshold = base_downvote_threshold / 2; // Easier to hide
+        };
+
+        (base_upvote_threshold, base_downvote_threshold)
+    }
+
 
     /****************************************************************
      * APTOS SOCIAL FEED VIEW FUNCTIONS
