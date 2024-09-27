@@ -6,14 +6,14 @@ const uid = new ShortUniqueId({
   dictionary: 'hex',
 });
 
-export const convertAmountFromHumanReadableToOnChain = (
+export const amountToApt = (
   value: number,
   decimal: number
 ) => {
   return value * Math.pow(10, decimal);
 };
 
-export const convertAmountFromOnChainToHumanReadable = (
+export const aptToAmount = (
   value: number,
   decimal: number
 ) => {

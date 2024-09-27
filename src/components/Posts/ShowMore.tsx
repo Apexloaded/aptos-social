@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import parseHtmlToJsx from "./HtmlToJxs";
+import React, { useState } from 'react';
+import parseHtmlToJsx from './HtmlToJxs';
 
 interface Props {
   data: string;
@@ -13,9 +13,9 @@ interface Props {
 
 function ShowMore({
   data,
-  truncatedEndingComponent = "...",
-  less = "Show less",
-  more = "Show more",
+  truncatedEndingComponent = '...',
+  less = 'Show less',
+  more = 'Show more',
   endLength = 250,
   isShowMore = false,
   onClick,
@@ -40,12 +40,12 @@ function ShowMore({
 
     if (lastMatchIndex === 0) {
       // If no full sentence is found within the limit, truncate at the nearest word boundary
-      const words = str.substring(0, length).split(" ");
+      const words = str.substring(0, length).split(' ');
       words.pop();
-      return words.join(" ") + "...";
+      return words.join(' ') + '...';
     }
 
-    return str.substring(0, lastMatchIndex) + "...";
+    return str.substring(0, lastMatchIndex) + '...';
   };
 
   const contentToDisplay = showMore
@@ -54,19 +54,19 @@ function ShowMore({
 
   return (
     <>
-      <div>
-        <div className="html-data text-dark dark:text-white">{contentToDisplay}</div>
-        {showMore && data.length > endLength && (
-          <button
-            className={`text-primary font-semibold text-sm gap-1 items-center ${
-              showMore ? "flex ml-0 mt-2" : "inline-flex"
-            } `}
-            onClick={onClick}
-          >
-            {showMore ? more : less}
-          </button>
-        )}
+      <div className="html-data text-dark dark:text-white">
+        {contentToDisplay}
       </div>
+      {showMore && data.length > endLength && (
+        <button
+          className={`text-primary font-semibold text-sm gap-1 items-center ${
+            showMore ? 'flex ml-0 mt-2' : 'inline-flex'
+          } `}
+          onClick={onClick}
+        >
+          {showMore ? more : less}
+        </button>
+      )}
     </>
   );
 }

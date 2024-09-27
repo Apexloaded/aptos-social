@@ -1,4 +1,4 @@
-module aptos_social_host::aptos_social_feeds {
+module aptos_social::feeds {
     use std::option::{Self, Option};
     use std::signer;
     use std::string::{Self, String};
@@ -11,8 +11,11 @@ module aptos_social_host::aptos_social_feeds {
 
     use aptos_framework::aptos_account;
     use aptos_framework::event;
+    use aptos_framework::coin::{Self, Coin};
     use aptos_framework::object::{Self, Object, ObjectCore, ExtendRef};
     use aptos_framework::timestamp;
+    use aptos_framework::fungible_asset::{Self, MintRef, TransferRef, BurnRef, Metadata, FungibleAsset};
+    use aptos_framework::primary_fungible_store;
 
     use aptos_token_objects::collection::{Self, Collection, MutatorRef};
     use aptos_token_objects::royalty::{Self, Royalty};
@@ -22,8 +25,10 @@ module aptos_social_host::aptos_social_feeds {
     use minter::mint_stage;
     use minter::collection_components;
 
-    use aptos_social_host::aptos_social_utils;
-    use aptos_social_host::aptos_social_profile::{Self, Creator};
+    use aptos_social::utils;
+    use aptos_social::events;
+    use aptos_social::listing::{Self, Listing};
+    use aptos_social::profile::{Self, Creator};
 
     // Error codes
     const ERROR_INVALID_STRING: u64 = 0;
@@ -52,7 +57,6 @@ module aptos_social_host::aptos_social_feeds {
         tip_count: u64,
         media: vector<Media>,
         metadata_uri: String,
-        token_obj: Object<Token>,
         created_at: u64,
         is_collectible: bool,
         liked_by: vector<address>,
@@ -64,6 +68,10 @@ module aptos_social_host::aptos_social_feeds {
         downvotes: vector<address>,
         hidden: bool,
         featured: bool,
+    }
+
+    struct PostListing has key, store, drop, copy {
+        listing: Object<Listing>
     }
 
     struct Tips has store {
@@ -112,19 +120,13 @@ module aptos_social_host::aptos_social_feeds {
         tips_count: u64,
         posts: vector<Post>,
         post_item: Table<u64, Post>,
+        post_listing: Table<u64, PostListing>,
         tips: vector<Tips>,
         post_comments: Table<u64, vector<Post>>,
         admin_addr: address,
         pending_admin_addr: Option<address>,
         collections: vector<Object<Collection>>,
         custom_collection_name: Table<String, Object<Collection>>,
-    }
-
-    #[event]
-    struct PostCreatedEvent has drop, store {
-        post_id: u64,
-        author: address,
-        timestamp: u64,
     }
 
     #[event]
@@ -143,17 +145,6 @@ module aptos_social_host::aptos_social_feeds {
         timestamp: u64,
     }
 
-    #[event]
-    struct CollectionCreatedEvent has drop, store {
-        creator_addr: address,
-        collection_owner_obj: Object<CollectionAccessConfig>,
-        collection_obj: Object<Collection>,
-        max_supply: u64,
-        name: String,
-        description: String,
-        uri: String,
-    }
-
     /// If you deploy the module under your own account, sender is your account's signer
     fun init_module(account: &signer) {
         let account_addr = signer::address_of(account);
@@ -164,6 +155,7 @@ module aptos_social_host::aptos_social_feeds {
             tips_count: 0,
             posts: vector::empty(),
             post_item: table::new(),
+            post_listing: table::new(),
             tips: vector::empty(),
             post_comments: table::new(),
             admin_addr: signer::address_of(account),
@@ -187,9 +179,9 @@ module aptos_social_host::aptos_social_feeds {
         featured_img: Option<String>,
     ) acquires AptosSocialFeedState, UserCollections {
         let creator_address = signer::address_of(account);
-        assert!(aptos_social_profile::profile_exists(creator_address), ERROR_UNAUTHORISED_ACCESS);
+        assert!(profile::profile_exists(creator_address), ERROR_UNAUTHORISED_ACCESS);
         
-        let id = aptos_social_utils::to_lowercase(&custom_id);
+        let id = utils::to_lowercase(&custom_id);
         let royalty = royalty(&mut royalty_percentage, creator_address);
 
         let owner_constructor_ref = &object::create_object(creator_address);
@@ -234,7 +226,7 @@ module aptos_social_host::aptos_social_feeds {
             collection_access_config: collection_owner_obj,
         });
 
-        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         vector::push_back(&mut state.collections, collection_obj);
         table::add(&mut state.custom_collection_name, id, collection_obj);
         store_collection_metadata(
@@ -248,15 +240,14 @@ module aptos_social_host::aptos_social_feeds {
             object::object_address(&collection_obj)
         );
 
-        event::emit(CollectionCreatedEvent {
-            creator_addr: creator_address,
-            collection_owner_obj,
+        events::emit_collection_created<Collection>(
+            creator_address,
             collection_obj,
             max_supply,
             name,
             description,
             uri
-        });
+        )
     }
 
     public entry fun mint_post(
@@ -267,6 +258,7 @@ module aptos_social_host::aptos_social_feeds {
         media_mimetypes: vector<String>,
         metadata_uri: String,
         collection_obj: Object<Collection>,
+        is_nft_post: bool
     ) acquires AptosSocialFeedState, CollectionConfig, CollectionAccessConfig {
         let creator_address = signer::address_of(account);
         assert!(string::length(&content) > 0, ERROR_INVALID_STRING);
@@ -277,13 +269,13 @@ module aptos_social_host::aptos_social_feeds {
             object::object_address(&access_config_obj)
         );
         
-        assert!(aptos_social_profile::profile_exists(creator_address), ERROR_UNAUTHORISED_ACCESS);
+        assert!(profile::profile_exists(creator_address), ERROR_UNAUTHORISED_ACCESS);
         assert!(access_config.creator == creator_address, ERROR_UNAUTHORISED_ACCESS);
 
-        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         let post_id = state.post_count + 1;
         
-        let hashtags = aptos_social_utils::extract_hashtags(&content);
+        let hashtags = utils::extract_hashtags(&content);
 
         let media = vector::empty<Media>();
         let media_length = vector::length(&media_urls);
@@ -296,40 +288,43 @@ module aptos_social_host::aptos_social_feeds {
             i = i + 1;
         };
 
-        let nft_obj = mint_nft_internal(creator_address, collection_obj, metadata_uri);
-        let post = Post {
-            id: post_id,
-            author: creator_address,
-            content,
-            price,
-            collector: @0x0,
-            tip_count: 0,
-            media,
-            metadata_uri,
-            token_obj: nft_obj,
-            created_at: timestamp::now_seconds(),
-            is_collectible: true,
-            liked_by: vector::empty(),
-            parent_id: 0,
-            hashtag: hashtags,
-            comment_count: 0,
-            is_comment: false,
-            upvotes: vector::empty(),
-            downvotes: vector::empty(),
-            hidden: false,
-            featured: false
+        let is_collectible = false;
+        if(media_length > 0) {
+            is_collectible = is_nft_post;
+        } else {
+            is_collectible = false;
         };
 
-        vector::push_back(&mut state.posts, post);
-        table::add(&mut state.post_item, post_id, post);
-        state.post_count = post_id;
+        if (is_collectible) {
+            let nft = option::some(
+                mint_nft_internal(creator_address, collection_obj, metadata_uri)
+            );
+            let token_obj = *option::borrow(&nft);
+            let (_, constructor_ref) = listing::init(account, token_obj, timestamp::now_seconds());
+            let listing = object::object_from_constructor_ref(&constructor_ref);
+            table::add(&mut state.post_listing, post_id, PostListing { listing });
+        };
+
+        let post = store_post(
+            state,
+            post_id,
+            creator_address,
+            content,
+            price,
+            media,
+            metadata_uri,
+            is_collectible,
+            0,
+            hashtags,
+            false
+        );
 
         // Emit post created event
-        event::emit(PostCreatedEvent {
+        events::emit_post_created(
             post_id,
-            author: creator_address,
-            timestamp: timestamp::now_seconds(),
-        });
+            creator_address,
+            timestamp::now_seconds()
+        );
     }
 
     public entry fun add_comment(
@@ -338,69 +333,57 @@ module aptos_social_host::aptos_social_feeds {
         comment: String
     ) acquires AptosSocialFeedState {
         let sender_address = signer::address_of(account);
-        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, pid), ERROR_NOT_FOUND);
-        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+        assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
         assert!(string::length(&comment) > 0, ERROR_INVALID_STRING);
 
-        let post_id = state.post_count + 1;
+        let comment_id = state.post_count + 1;
 
         let parent_post = table::borrow_mut(&mut state.post_item, pid);
         parent_post.comment_count = parent_post.comment_count + 1;
 
-        let hashtags = aptos_social_utils::extract_hashtags(&comment);
-        let child_post = Post {
-            id: post_id,
-            author: sender_address,
-            content: comment,
-            price: 0,
-            collector: @0x0,
-            tip_count: 0,
-            media: vector::empty<Media>(),
-            metadata_uri: string::utf8(b""),
-            token_obj: parent_post.token_obj,
-            created_at: timestamp::now_seconds(),
-            is_collectible: true,
-            liked_by: vector::empty(),
-            parent_id: pid,
-            hashtag: hashtags,
-            comment_count: 0,
-            is_comment: true,
-            upvotes: vector::empty(),
-            downvotes: vector::empty(),
-            hidden: false,
-            featured: false
-        };
+        let hashtags = utils::extract_hashtags(&comment);
 
-        // Add the child post to the global state
-        vector::push_back(&mut state.posts, child_post);
-        table::add(&mut state.post_item, post_id, child_post);
-        state.post_count = post_id;
+        let post = store_post(
+            state,
+            comment_id,
+            sender_address,
+            comment,
+            0,
+            vector::empty<Media>(),
+            string::utf8(b""),
+            false,
+            pid,
+            hashtags,
+            true
+        );
 
         // Update the post_comments table
         if(!table::contains(&state.post_comments, pid)) {
             let new_comment = vector::empty<Post>();
-            vector::push_back(&mut new_comment, child_post);
-            table::add(&mut state.post_comments,pid, new_comment);
+            vector::push_back(&mut new_comment, post);
+            table::add(&mut state.post_comments, pid, new_comment);
         } else {
             let cc = *table::borrow_mut(&mut state.post_comments, pid);
-            vector::push_back(&mut cc, child_post);
+            vector::push_back(&mut cc, post);
             table::upsert(&mut state.post_comments, pid, cc);
         };
 
         // Emit post created event
-        event::emit(PostCreatedEvent {
-            post_id,
-            author: sender_address,
-            timestamp: timestamp::now_seconds(),
-        });
+        events::emit_comment_added(
+            comment_id,
+            pid,
+            sender_address,
+            timestamp::now_seconds(),
+        );
     }
 
     public entry fun like(account: &signer, post_id: u64) acquires AptosSocialFeedState {
         let sender_address = signer::address_of(account);
-        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
-        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+        assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
         
         let post = table::borrow_mut(&mut state.post_item, post_id);
 
@@ -410,9 +393,9 @@ module aptos_social_host::aptos_social_feeds {
 
     public entry fun unlike(account: &signer, post_id: u64) acquires AptosSocialFeedState {
         let sender_address = signer::address_of(account);
-        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
-        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+        assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
 
         let post = table::borrow_mut(&mut state.post_item, post_id);
         let (is_found, index) = vector::index_of(&post.liked_by, &sender_address);
@@ -421,18 +404,46 @@ module aptos_social_host::aptos_social_feeds {
         vector::remove(&mut post.liked_by, index);
     }
 
-    public entry fun collect_post(account: &signer, post_id: u64) acquires AptosSocialFeedState {
+    public entry fun collect_post<CoinType>(account: &signer, post_id: u64) acquires AptosSocialFeedState {
         let sender_address = signer::address_of(account);
-        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
-        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+        assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+
+        let post = table::borrow_mut(&mut state.post_item, post_id);
+        let post_listing = *table::borrow_mut(&mut state.post_listing, post_id);
+
+        assert!(post.is_collectible, ERROR_PROCESS_FAILED);
+
+        let coins = coin::withdraw<CoinType>(account, post.price);
+        let price = coin::value<CoinType>(&coins);
+        let (royalty_addr, royalty_charge) = listing::calculate_royalty(post_listing.listing, price);
+        let seller = listing::close(account, post_listing.listing, sender_address);
+        post.collector = sender_address;
+        post.is_collectible = false;
+        table::remove(&mut state.post_listing, post_id);
+
+        if (royalty_charge != 0) {
+            let royalty = coin::extract(&mut coins, royalty_charge);
+            aptos_account::deposit_coins(royalty_addr, royalty);
+        };
+
+        aptos_account::deposit_coins(seller, coins);
+
+        events::emit_listing_filled(
+            object::object_address(&post_listing.listing),
+            seller,
+            sender_address,
+            price,
+            royalty_charge
+        )
     }
 
     public entry fun upvote_post(account: &signer, post_id: u64) acquires AptosSocialFeedState { 
         let sender_address = signer::address_of(account);
-        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
-        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+        assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
         
         let post = table::borrow_mut(&mut state.post_item, post_id);
 
@@ -453,14 +464,15 @@ module aptos_social_host::aptos_social_feeds {
         let (upvote_threshold, _) = calculate_threshold(post);
         if (upvotes >= upvote_threshold) {
             post.featured = true;
+            post.hidden = false;
         }
     }
 
     public entry fun downvote_post(account: &signer, post_id: u64) acquires AptosSocialFeedState { 
         let sender_address = signer::address_of(account);
-        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
-        assert!(aptos_social_profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
+        assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
         
         let post = table::borrow_mut(&mut state.post_item, post_id);
 
@@ -481,12 +493,56 @@ module aptos_social_host::aptos_social_feeds {
         let (_, downvote_threshold) = calculate_threshold(post);
         if (downvotes >= downvote_threshold) {
             post.hidden = true;
+            post.featured = false;
         }
     }
 
     /****************************************************************
      * APTOS SOCIAL FEED INTERNAL FUNCTIONS
      ****************************************************************/
+
+    inline fun store_post(
+        state: &mut AptosSocialFeedState,
+        post_id: u64,
+        creator_address: address,
+        content: String,
+        price: u64,
+        media: vector<Media>,
+        metadata_uri: String,
+        is_collectible: bool,
+        parent_id: u64,
+        hashtags: vector<String>,
+        is_comment: bool
+    ): Post {
+        let post = Post {
+            id: post_id,
+            author: creator_address,
+            content,
+            price,
+            collector: @0x0,
+            tip_count: 0,
+            media,
+            metadata_uri,
+            created_at: timestamp::now_seconds(),
+            is_collectible,
+            liked_by: vector::empty(),
+            parent_id: 0,
+            hashtag: hashtags,
+            comment_count: 0,
+            is_comment,
+            upvotes: vector::empty(),
+            downvotes: vector::empty(),
+            hidden: false,
+            featured: false
+        };
+
+        // let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
+        vector::push_back(&mut state.posts, post);
+        table::add(&mut state.post_item, post_id, post);
+        state.post_count = post_id;
+
+        post
+    }
     
     // Store NFT Metadata to storage
     inline fun store_collection_metadata(
@@ -578,7 +634,7 @@ module aptos_social_host::aptos_social_feeds {
     }
 
     inline fun generate_post_data(post: Post): PostItem {
-        let creator = aptos_social_profile::find_creator(post.author);
+        let creator = profile::find_creator(post.author);
         PostItem {post, creator}
     }
 
@@ -616,7 +672,7 @@ module aptos_social_host::aptos_social_feeds {
     #[view]
     /// Get all collections created using this contract
     public fun get_global_collections(): vector<Object<Collection>> acquires AptosSocialFeedState {
-        let state = borrow_global<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global<AptosSocialFeedState>(@aptos_social);
         state.collections
     }
 
@@ -646,15 +702,20 @@ module aptos_social_host::aptos_social_feeds {
     }
 
     #[view]
-    public fun list_all_posts(): vector<PostItem> acquires AptosSocialFeedState {
-        let state = borrow_global<AptosSocialFeedState>(@aptos_social_host);
+    public fun get_feeds(): vector<PostItem> acquires AptosSocialFeedState {
+        let state = borrow_global<AptosSocialFeedState>(@aptos_social);
         let posts_array = state.posts;
         let posts = vector::empty<PostItem>();
         let length = vector::length(&posts_array);
         let i = 0;
         while (i < length) {
             let post = *table::borrow(&state.post_item, i+1);
-            if(post.is_comment == false) {
+            let downvotes = vector::length(&post.downvotes);
+            let (_, downvote_threshold) = calculate_threshold(&post);            
+            if(post.is_comment == false && 
+                downvotes < downvote_threshold && 
+                post.hidden == false
+            ) {
                 let post_item = generate_post_data(post);
                 vector::push_back(&mut posts, post_item);
             };
@@ -665,14 +726,38 @@ module aptos_social_host::aptos_social_feeds {
 
     #[view]
     public fun get_post_by_id(post_id: u64): PostItem acquires AptosSocialFeedState {
-        let state = borrow_global<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global<AptosSocialFeedState>(@aptos_social);
         let post = *table::borrow(&state.post_item, post_id);
         generate_post_data(post)
     }
 
     #[view]
+    public fun get_posts_by_hashtag(hashtag: String): vector<PostItem> acquires AptosSocialFeedState {
+        let state = borrow_global<AptosSocialFeedState>(@aptos_social);
+        let posts_array = state.posts;
+        let posts = vector::empty<PostItem>();
+        let length = vector::length(&posts_array);
+        let i = 0;
+        while (i < length) {
+            let post = *table::borrow(&state.post_item, i+1);
+            let downvotes = vector::length(&post.downvotes);
+            let (_, downvote_threshold) = calculate_threshold(&post);  
+            let l_hashtag = utils::to_lowercase(&hashtag);         
+            if(downvotes < downvote_threshold && 
+                post.hidden == false &&
+                vector::contains(&post.hashtag, &l_hashtag)
+            ) {
+                let post_item = generate_post_data(post);
+                vector::push_back(&mut posts, post_item);
+            };
+            i = i + 1;
+        };
+        posts
+    }
+
+    #[view]
     public fun get_comments(post_id: u64): vector<PostItem> acquires AptosSocialFeedState {
-        let state = borrow_global<AptosSocialFeedState>(@aptos_social_host);
+        let state = borrow_global<AptosSocialFeedState>(@aptos_social);
         let comment_array = *table::borrow(&state.post_comments, post_id);
         let comments = vector::empty<PostItem>();
         let length = vector::length(&comment_array);

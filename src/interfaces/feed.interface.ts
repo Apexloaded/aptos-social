@@ -22,8 +22,8 @@ export interface IPost {
   parent_id: string;
   comment_count: number;
   is_comment: boolean;
-  down_votes: string[];
-  up_votes: string[];
+  downvotes: string[];
+  upvotes: string[];
 }
 
 export interface IPostItem {
@@ -38,6 +38,7 @@ export interface INewPost {
   media_mimetypes: Array<string>;
   metadata_uri: string;
   collection_obj: string;
+  is_nft_post: boolean;
 }
 
 export interface IAddComment {

@@ -54,10 +54,10 @@ async function publish() {
 
     move.createObjectAndPublishPackage({
         packageDirectoryPath: 'contract',
-        addressName: 'aptos_social_host',
+        addressName: 'aptos_social',
         namedAddresses: {
             // Publish module to account address
-            aptos_social_host: accountAddress,
+            aptos_social: accountAddress,
             // This is the address you want to use to create fungible asset with, e.g. an address in Petra so you can create fungible asset in UI using Petra
             initial_creator_addr: process.env.ADMIN_ADDR,
             minter: tokenMinterContractAddress,

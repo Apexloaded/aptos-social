@@ -4,7 +4,8 @@ import {
   get_creators_collections,
   get_metadata,
   get_post_by_id,
-  list_all_posts,
+  get_feeds,
+  get_posts_by_hashtag,
 } from '../aptos.function';
 import { ICollection } from '@/interfaces/collection.interface';
 import { IPost, IPostItem } from '@/interfaces/feed.interface';
@@ -42,7 +43,7 @@ export const getCollectionMetadata = async (
 export const getAllPosts = async (): Promise<IPostItem[]> => {
   const response = await aptosClient().view<[Array<IPostItem>]>({
     payload: {
-      function: list_all_posts,
+      function: get_feeds,
       functionArguments: [],
     },
   });
@@ -64,6 +65,18 @@ export const getPostComments = async (postId: number): Promise<IPostItem[]> => {
     payload: {
       function: get_comments,
       functionArguments: [postId],
+    },
+  });
+  return response[0];
+};
+
+export const getPostByHashtag = async (
+  hashtag: string
+): Promise<IPostItem[]> => {
+  const response = await aptosClient().view<[Array<IPostItem>]>({
+    payload: {
+      function: get_posts_by_hashtag,
+      functionArguments: [hashtag],
     },
   });
   return response[0];

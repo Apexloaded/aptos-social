@@ -11,6 +11,8 @@ import Auth, { IAuth } from '@/models/auth.model';
 import { createSession, deleteSession } from '@/lib/session';
 import { Sessions } from '@/config/session.enum';
 import { FilterQuery } from 'mongoose';
+import { cookies } from 'next/headers';
+import { jwtDecode } from 'jwt-decode';
 
 export async function registerAuth(payload: IAuth): Promise<IActionResponse> {
   try {
@@ -144,6 +146,25 @@ export async function completeOnboarding(
   } catch (error: any) {
     console.log(error);
     return { status: false, message: `${error.message}` };
+  }
+}
+
+export async function isAuthenticated() {
+  const cookie = cookies().get(Sessions.AuthSession)?.value;
+
+  if (!cookie) {
+    return false;
+  }
+
+  try {
+    const parsedCookie: any = jwtDecode(cookie);
+    const expires = new Date(parsedCookie.exp * 1000);
+    if (expires < new Date()) {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    return false;
   }
 }
 

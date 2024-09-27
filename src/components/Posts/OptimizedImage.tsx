@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image, { ImageProps } from 'next/image';
 import { cn } from '@/lib/utils';
 import { BLURURL } from '@/config/constants';
@@ -11,6 +11,7 @@ interface OptimizedImageProps extends Omit<ImageProps, 'height' | 'width'> {
   height?: number | `${number}`;
   containerClassName?: string;
   fillContainer?: boolean;
+  maxRetries?: number;
 }
 
 export default function OptimizedImage({
@@ -27,9 +28,33 @@ export default function OptimizedImage({
   placeholder = 'blur',
   blurDataURL = BLURURL,
   fillContainer = false,
+  maxRetries = 3,
   ...props
 }: OptimizedImageProps) {
   const [isLoading, setLoading] = useState(true);
+  const [imgSrc, setImgSrc] = useState(src);
+  const [retryCount, setRetryCount] = useState(0);
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  useEffect(() => {
+    setImgSrc(src);
+    setRetryCount(0);
+    setLoading(true);
+    setLoadFailed(false);
+  }, [src]);
+
+  const handleImageError = () => {
+    if (retryCount < maxRetries) {
+      setTimeout(() => {
+        setRetryCount(retryCount + 1);
+        setImgSrc(`${src}?retry=${retryCount + 1}`);
+      }, 1000 * (retryCount + 1)); // Exponential backoff
+    } else {
+      console.error(`Failed to load image after ${maxRetries} retries`);
+      setLoading(false);
+      setLoadFailed(true);
+    }
+  };
 
   const containerStyle: React.CSSProperties = {
     aspectRatio: aspectRatio,
@@ -46,13 +71,13 @@ export default function OptimizedImage({
     <Image
       className={cn(
         'duration-700 ease-in-out',
-        isLoading
+        isLoading || loadFailed
           ? 'scale-110 blur-2xl grayscale'
           : 'scale-100 blur-0 grayscale-0',
         fillContainer ? 'object-cover' : 'object-contain',
         className
       )}
-      src={src}
+      src={imgSrc}
       alt={alt}
       fill={fillContainer}
       width={!fillContainer ? width : undefined}
@@ -62,7 +87,11 @@ export default function OptimizedImage({
       priority={priority}
       placeholder={placeholder}
       blurDataURL={blurDataURL}
-      onLoadingComplete={() => setLoading(false)}
+      onLoad={() => {
+        setLoading(false);
+        setLoadFailed(false);
+      }}
+      onError={handleImageError}
       {...props}
     />
   );

@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = []
 
 [addresses]
-aptos_social_host = '_'
+aptos_social = '_'
 std = '0x1'
 friend_addr = '_'
 minter = "_"

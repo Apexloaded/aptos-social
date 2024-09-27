@@ -52,7 +52,7 @@ async function publish() {
     packageDirectoryPath: 'contract',
     objectAddress: process.env.MODULE_ADDRESS,
     namedAddresses: {
-      aptos_social_host: process.env.MODULE_ADDRESS,
+      aptos_social: process.env.MODULE_ADDRESS,
       minter: tokenMinterContractAddress,
       friend_addr:
         '99cabef4f4daa7af133cc7c6ed737d9c0ef0858d79f92e3a1080bd13a0e7b2f2',

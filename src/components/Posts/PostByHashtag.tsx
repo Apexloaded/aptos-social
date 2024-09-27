@@ -1,19 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { PostItem } from './PostItem';
 import { useQuery } from '@tanstack/react-query';
 import { QueryKeys } from '@/config/query-keys';
-import { getAllPosts } from '@/aptos/view/feeds.view';
+import { getPostByHashtag } from '@/aptos/view/feeds.view';
 import { sortPostByDate } from '@/lib/posts';
-import NewPost from './NewPost';
 
-export function Posts() {
-  // const [posts, setPosts] = useState<IPostItem[]>([]);
+type Props = {
+  hashtag: string;
+};
+export function PostsByHashtag({ hashtag }: Props) {
   const { data } = useQuery({
-    queryKey: [QueryKeys.Posts],
+    queryKey: [QueryKeys.Posts, QueryKeys.Hashtag, hashtag],
     queryFn: async () => {
-      const _posts = await getAllPosts();
+      const _posts = await getPostByHashtag(hashtag);
       const sortedPost = sortPostByDate(_posts).filter(
         (p) => !p.post.is_comment
       );
@@ -23,7 +24,6 @@ export function Posts() {
 
   return (
     <div className="mx-auto w-full flex flex-col gap-8">
-      <NewPost />
       {data &&
         data.map((post, i) => (
           <PostItem

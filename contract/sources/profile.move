@@ -1,4 +1,4 @@
-module aptos_social_host::aptos_social_profile {
+module aptos_social::profile {
     use std::option::{Self, Option};
     use std::signer;
     use std::string::{Self, String};
@@ -10,7 +10,7 @@ module aptos_social_host::aptos_social_profile {
     use aptos_framework::event;
     use aptos_framework::timestamp;
 
-    use aptos_social_host::aptos_social_utils;
+    use aptos_social::utils;
 
     // Error codes
     const ERROR_INVALID_STRING: u64 = 0;
@@ -81,8 +81,8 @@ module aptos_social_host::aptos_social_profile {
         pfp: String
     ) acquires AptosSocialProfileState {
         let creator_address = signer::address_of(creator);
-        let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social_host);
-        let lowercase_username = aptos_social_utils::to_lowercase(&username);
+        let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social);
+        let lowercase_username = utils::to_lowercase(&username);
         
         assert!(!table::contains(&state.creators, creator_address), ERROR_DUPLICATE_RESOURCE); // ERROR_DUPLICATE_RESOURCE
         assert!(!table::contains(&state.usernames, lowercase_username), ERROR_DUPLICATE_RESOURCE); // ERROR_DUPLICATE_RESOURCE
@@ -129,15 +129,15 @@ module aptos_social_host::aptos_social_profile {
         website: String
     ) acquires AptosSocialProfileState {
         let creator_address = signer::address_of(creator);
-        let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social_host);
-        let lowercase_username = aptos_social_utils::to_lowercase(&username);
+        let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social);
+        let lowercase_username = utils::to_lowercase(&username);
 
         assert!(table::contains(&state.creators, creator_address), ERROR_NOT_FOUND);
         assert!(string::length(&name) > 0 && string::length(&username) > 0, ERROR_INVALID_STRING); // ERROR_INVALID_STRING
 
         let creator = table::borrow_mut(&mut state.creators, creator_address);
 
-        if(!aptos_social_utils::is_same_string(creator.username, username)) {
+        if(!utils::is_same_string(creator.username, username)) {
             assert!(!table::contains(&state.usernames, lowercase_username), ERROR_DUPLICATE_RESOURCE);
             // Remove old username mapping and add new one
             table::remove(&mut state.usernames, creator.username);
@@ -160,7 +160,7 @@ module aptos_social_host::aptos_social_profile {
         friend_address: address
     ) acquires AptosSocialProfileState {
         let creator_address = signer::address_of(creator);
-        let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social_host);
+        let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social);
 
         // Check if users exists
         assert!(table::contains(&state.creators, creator_address), ERROR_NOT_FOUND);
@@ -173,29 +173,29 @@ module aptos_social_host::aptos_social_profile {
 
     #[view]
     public fun profile_exists(creator: address): bool acquires AptosSocialProfileState {
-        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social);
         table::contains(&state.creators, creator)
     }
 
     #[view]
     public fun is_name_taken(username: String): bool acquires AptosSocialProfileState {
-        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
-        let lowercase_username = aptos_social_utils::to_lowercase(&username);
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social);
+        let lowercase_username = utils::to_lowercase(&username);
         table::contains(&state.usernames, lowercase_username)
     }
 
     // Retrieve a creator's profile by address
     #[view]
     public fun find_creator(creator_address: address): Creator acquires AptosSocialProfileState {
-        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social);
         *table::borrow(&state.creators, creator_address)
     }
 
     // Retrieve a creator's profile by username
     #[view]
     public fun find_creator_by_name(username: String): Creator acquires AptosSocialProfileState {
-        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
-        let lower_username = aptos_social_utils::to_lowercase(&username);
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social);
+        let lower_username = utils::to_lowercase(&username);
 
         assert!(table::contains(&state.usernames, lower_username), ERROR_NOT_FOUND);
 
@@ -205,7 +205,7 @@ module aptos_social_host::aptos_social_profile {
 
     #[view]
     public fun find_all_creators(): vector<Creator> acquires AptosSocialProfileState {
-        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social);
 
         let creators = vector::empty<Creator>();
         let addresses = &state.creator_addresses;
@@ -225,7 +225,7 @@ module aptos_social_host::aptos_social_profile {
     #[test_only]
     /// Get all registered Creators
     public entry fun verify_creator_exists(creator_address: address): bool acquires AptosSocialProfileState {
-        let state = borrow_global<AptosSocialProfileState>(@aptos_social_host);
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social);
         table::contains(&state.creators, creator_address)
     }
 

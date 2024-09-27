@@ -13,8 +13,8 @@ export const Info: React.FC<InfoProps> = ({ description }) => {
         <InfoIcon className="w-4 h-4 text-gray-400" />
       </TooltipTrigger>
 
-      <TooltipContent>
-        <p className="max-w-md">{description}</p>
+      <TooltipContent className="bg-white">
+        <p className="max-w-md bg-white text-dark/80">{description}</p>
       </TooltipContent>
     </Tooltip>
   );

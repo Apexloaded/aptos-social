@@ -117,39 +117,14 @@ function Welcome() {
         featured_img: `${collectionUrl}/feature.jpg`,
       }).data;
 
-      console.log(registerTx);
-      console.log(createColTx);
-
-      const batchTxRes = await signAndSubmitBatchTransaction([
+      await signAndSubmitBatchTransaction([
         registerTx,
         createColTx,
       ]);
 
-      console.log(batchTxRes);
       await completeOnboarding(`${account?.accountAddress.toString()}`);
       success({ msg: 'Profile was successfully created' });
       router.push(routes.app.home);
-      // const response = await signAndSubmitTransaction(
-      //   registerCreator({
-      //     name: data.name,
-      //     email: data.email,
-      //     username: data.username,
-      //     pfp: pfpUrl,
-      //   })
-      // );
-
-      // if (response) {
-      //   const committedTransactionResponse =
-      //     await aptosClient().waitForTransaction({
-      //       transactionHash: response.hash,
-      //     });
-
-      //   if (committedTransactionResponse.success) {
-      //     await completeOnboarding(`${account?.accountAddress.toString()}`);
-      //     success({ msg: 'Profile was successfully created' });
-      //     router.push(routes.app.home);
-      //   }
-      // }
     } catch (err: any) {
       console.log(err);
       // const msg = getError(err);

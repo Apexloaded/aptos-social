@@ -10,6 +10,10 @@ import { QueryKeys } from '@/config/query-keys';
 
 export function LikeButton({ post }: ButtonProps) {
   const { address, signAndSubmitTransaction } = useAccount();
+  // console.log(post.liked_by.includes(`${address}`));
+  // console.log(address);
+  // 0xe0d64e0c9e761019790655f49fa224566dccaef24ed1b32de567cd4327fc8c4b
+  // 0xe0d64e0c9e761019790655f49fa224566dccaef24ed1b32de567cd4327fc8c4b
   const [isLiked, setIsLiked] = useState(post.liked_by.includes(`${address}`));
   const [optimisticLikeCount, setOptimisticLikeCount] = useState(
     post.liked_by.length

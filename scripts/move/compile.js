@@ -54,7 +54,7 @@ async function compile() {
     await move.compile({
         packageDirectoryPath: 'contract',
         namedAddresses: {
-            aptos_social_host: accountAddress,
+            aptos_social: accountAddress,
             minter: tokenMinterContractAddress,
             friend_addr:
                 '99cabef4f4daa7af133cc7c6ed737d9c0ef0858d79f92e3a1080bd13a0e7b2f2',

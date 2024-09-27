@@ -37,6 +37,8 @@ import { generate_nft_story_prompt } from '@/lib/prompts';
 import { QueryKeys } from '@/config/query-keys';
 import { queryClient } from '@/providers/ReactQueryProvider';
 import { useAuth } from '@/context/auth.context';
+import { amountToApt, APT_DECIMALS } from '@/utils/helpers';
+import NewPostForm from './NewPostForm';
 
 export function MintPost() {
   const router = useRouter();
@@ -168,11 +170,12 @@ export function MintPost() {
       const response = await signAndSubmitTransaction(
         mintPost({
           content,
-          price: 1,
+          price: amountToApt(2, APT_DECIMALS),
           media_urls,
           media_mimetypes,
           metadata_uri,
           collection_obj,
+          is_nft_post: true,
         })
       );
 
@@ -192,8 +195,7 @@ export function MintPost() {
         }
       }
     } catch (err: any) {
-      // const msg = getError(err);
-      error({ msg: `Error creating profile` });
+      error({ msg: `Error minting post` });
     }
   };
 
@@ -221,102 +223,7 @@ export function MintPost() {
                 </Button>
               </DialogTitle>
               <div className="mt-2 flex items-start space-x-3">
-                <CreatorPFP
-                  username={user?.username}
-                  name={user?.name}
-                  pfp={user?.pfp}
-                />
-                <div className="flex-1 flex flex-col relative">
-                  <Controller
-                    control={control}
-                    render={({ field: { onChange, value } }) => (
-                      <>
-                        <DexaEditor
-                          onWordCount={onWordCount}
-                          onUpdate={onChange}
-                          defaultValue={value}
-                          ref={editorRef}
-                        />
-                        <MediaPreview file={mediaFile} onClear={removeMedia} />
-                        {errors.images && (
-                          <ShowError error={errors.images.message} />
-                        )}
-                      </>
-                    )}
-                    name={'content'}
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between border-t border-light pt-[0.8rem]">
-                <div className="flex items-center">
-                  <Controller
-                    control={control}
-                    render={({ field: { onChange, value } }) => (
-                      <>
-                        <FileSelector
-                          onSelect={(ev) => {
-                            if (ev.target.files) {
-                              const file = ev.target.files[0];
-                              setMediaFile(file);
-                              setValue('images', file);
-                              onChange(file);
-                            }
-                          }}
-                          ref={mediaRef}
-                          accept="image/png, image/jpeg"
-                        />
-                        <Button
-                          size="icon"
-                          variant={'ghost'}
-                          onClick={toggleMedia}
-                          title="Image"
-                        >
-                          <ImageIcon size={18} />
-                        </Button>
-                      </>
-                    )}
-                    name={'images'}
-                  />
-
-                  <Button size="icon" variant={'ghost'} title="GIF">
-                    <GifIcon height={18} />
-                  </Button>
-                  <Button size="icon" variant={'ghost'} title="Emoji">
-                    <SmilePlusIcon size={18} />
-                  </Button>
-                  <Button size="icon" variant={'ghost'} title="Pool">
-                    <ShieldQuestionIcon size={18} />
-                  </Button>
-                  <Button size="icon" variant={'ghost'} title="Schedule">
-                    <CalendarPlusIcon size={18} />
-                  </Button>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-1">
-                    {percentage > 100 && (
-                      <p className="text-xs text-danger">-{exceededCount}</p>
-                    )}
-                    <PostCounter showText={false} progress={percentage} />
-                  </div>
-
-                  <Button
-                    onClick={handleSubmit(onSubmit)}
-                    type={'submit'}
-                    disabled={!isValid || isEmptyContent || isSubmitting}
-                    size={'default'}
-                    className="rounded-full"
-                  >
-                    <p className="text-sm font-semibold">{'Mint'}</p>
-                  </Button>
-                  <Button
-                    onClick={onAiInit}
-                    type={'button'}
-                    size={'default'}
-                    className="rounded-full"
-                  >
-                    <p className="text-sm font-semibold">{'AI'}</p>
-                  </Button>
-                </div>
+                <NewPostForm close={close} />
               </div>
             </DialogPanel>
           </div>

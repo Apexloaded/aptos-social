@@ -29,9 +29,12 @@ export const get_metadata: `${string}::${string}::${string}` = `${AccountAddress
 export const mint_post: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${feeds}::mint_post`;
-export const list_all_posts: `${string}::${string}::${string}` = `${AccountAddress.from(
+export const collect_post: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
-)}::${feeds}::list_all_posts`;
+)}::${feeds}::collect_post`;
+export const get_feeds: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::get_feeds`;
 export const get_post_by_id: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${feeds}::get_post_by_id`;
@@ -47,4 +50,13 @@ export const like: `${string}::${string}::${string}` = `${AccountAddress.from(
 export const unlike: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${feeds}::unlike`;
+export const upvote_post: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::upvote_post`;
+export const downvote_post: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::downvote_post`;
+export const get_posts_by_hashtag: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::get_posts_by_hashtag`;
 

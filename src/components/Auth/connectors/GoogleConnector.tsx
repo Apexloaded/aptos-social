@@ -11,12 +11,15 @@ import useEphemeral from '@/hooks/ephemeral.hook';
 import useToast from '@/hooks/toast.hook';
 import { useAccount } from '@/context/account.context';
 import { findAuth, loginAuth, registerAuth } from '@/actions/auth.action';
+import { useAppDispatch } from '@/hooks/redux.hook';
+import { setAuth } from '@/slices/account/auth.slice';
 
 const POPUP_WIDTH = 400;
 const POPUP_HEIGHT = 600;
 
 export default function GoogleConnect() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
   const { error, loading, updateLoading, success } = useToast();
   const { createAccount } = useAccount();
@@ -68,6 +71,7 @@ export default function GoogleConnect() {
         createAccount(jwt, ekp),
       ]);
       if (login.status && keyless) {
+        dispatch(setAuth(true));
         success({ msg: 'Successfully signed in!' });
         router.push(routes.app.home);
       }
@@ -80,6 +84,7 @@ export default function GoogleConnect() {
         address: account.accountAddress.toString(),
       });
       if (response.status) {
+        dispatch(setAuth(true));
         success({ msg: 'Successfully signed up!' });
         router.push(routes.app.home);
       }

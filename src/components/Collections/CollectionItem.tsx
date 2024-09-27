@@ -6,12 +6,14 @@ import { ICollection } from '@/interfaces/collection.interface';
 import { QueryKeys } from '@/config/query-keys';
 import { useQuery } from '@tanstack/react-query';
 import { getCollectionMetadata } from '@/aptos/view/feeds.view';
+import { useGetCollectionData } from '@/hooks/collection-data.hook';
 
 type Props = {
   collection: ICollection;
 };
 export default function CollectionItem({ collection }: Props) {
   const { findMetadata } = useCollections();
+  const { data: collRes } = useGetCollectionData(collection.collection_id);
   // const { data } = findMetadata(collection.collection_id);
 
   const { data } = useQuery({
@@ -20,8 +22,14 @@ export default function CollectionItem({ collection }: Props) {
   });
 
   useEffect(() => {
-    console.log(data);
-  }, [data]);
+    if (collRes) {
+      console.log(collRes);
+    }
+  }, [collRes]);
+
+  // useEffect(() => {
+  //   console.log(data);
+  // }, [data]);
 
   return (
     <div className="bg-white dark:bg-dark rounded-xl p-3 h-96">

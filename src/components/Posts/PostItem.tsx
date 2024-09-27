@@ -18,15 +18,16 @@ import { selectPost } from '@/slices/posts/post-selected.slice';
 import { useAccount } from '@/context/account.context';
 import { BLURURL } from '@/config/constants';
 import OptimizedImage from './OptimizedImage';
+import CollectButton from './Buttons/CollectButton';
 
 export function PostItem({ post, creator }: IPostItem) {
-  console.log(post);
   const router = useRouter();
   const dispatch = useAppDispatch();
   const username = creator.username;
   const { address } = useAccount();
 
   const isOwner = address === post.author;
+  const isMediaAvailable = post.media.length > 0;
 
   useEffect(() => {
     router.prefetch(routes.app.mints(`${username}`, post.id.toString()));
@@ -68,14 +69,15 @@ export function PostItem({ post, creator }: IPostItem) {
         </div>
       </div>
 
-      <div className="mt-4 mb-3 rounded-2xl border border-light dark:border-dark-light max-h-[35rem] overflow-hidden">
-        <OptimizedImage
-          src={post.media[0].url}
-          alt={`Story ${post.id}`}
-          height={400}
-          width={600}
-        />
-        {/* <Image
+      {isMediaAvailable && (
+        <div className="mt-4 mb-3 rounded-2xl border border-light dark:border-dark-light max-h-[35rem] overflow-hidden">
+          <OptimizedImage
+            src={post.media[0].url}
+            alt={`Story ${post.id}`}
+            height={400}
+            width={600}
+          />
+          {/* <Image
           src={post.media[0].url}
           height={400}
           width={600}
@@ -85,30 +87,36 @@ export function PostItem({ post, creator }: IPostItem) {
           quality={30}
           blurDataURL={BLURURL}
         /> */}
-      </div>
-      <div className="flex items-center py-1 justify-between">
-        <PostButtons post={post} creator={creator} />
-        <div className="flex items-center">
-          {post.collector === '0x0' &&
-            post.is_collectible === true &&
-            !isOwner && (
-              <Button size="sm" variant="default" className="rounded-full">
-                <Grid2x2PlusIcon size={16} />
-                <p>Collect</p>
-              </Button>
-            )}
-          <Button
-            size={'icon'}
-            variant={'ghost'}
-            className="dark:hover:bg-dark"
-          >
-            <BookmarkButton post={post} creator={creator} />
-          </Button>
+        </div>
+      )}
+
+      <div
+        className={`flex ${isMediaAvailable ? 'flex-col' : 'flex-col-reverse'}`}
+      >
+        <div className="flex items-center py-1 justify-between">
+          <PostButtons post={post} creator={creator} />
+          <div className="flex items-center">
+            {post.collector === '0x0' &&
+              post.is_collectible === true &&
+              !isOwner && <CollectButton post={post} creator={creator} />}
+            <Button
+              size={'icon'}
+              variant={'ghost'}
+              className="dark:hover:bg-dark"
+            >
+              <BookmarkButton post={post} creator={creator} />
+            </Button>
+          </div>
+        </div>
+        <div className={`${isMediaAvailable ? '-mt-3' : ''}`}>
+          <ShowMore
+            onClick={postDetails}
+            data={post.content}
+            isShowMore={true}
+          />
         </div>
       </div>
-      <div className="">
-        <ShowMore onClick={postDetails} data={post.content} isShowMore={true} />
-      </div>
+
       {/* <div>Hash Tags</div> */}
     </div>
   );

@@ -45,6 +45,12 @@ export function PostDetails({ id }: Props) {
     },
   });
 
+  const isMediaAvailable = _post
+    ? _post.post.media.length > 0
+    : data
+    ? data.post.media.length > 0
+    : false;
+
   useEffect(() => {
     if (data) {
       setPost(data);
@@ -88,27 +94,29 @@ export function PostDetails({ id }: Props) {
       {post && (
         <div className="mt-2 px-5">
           <ShowMore data={post.post.content} />
-          <div className="rounded-xl mt-2 border border-light overflow-auto">
-            {post?.post.media.map((media, index) => (
-              <OptimizedImage
-                key={index}
-                src={media.url}
-                height={500}
-                width={1000}
-                alt={`Story ${post.post.id}`}
-              />
-              // <Image
-              //   key={index}
-              //   src={media.url}
-              //   height={500}
-              //   width={1000}
-              //   alt={`Story ${post.post.id}`}
-              //   priority={true}
-              //   placeholder="blur"
-              //   blurDataURL={BLURURL}
-              // />
-            ))}
-          </div>
+          {isMediaAvailable && (
+            <div className="rounded-xl mt-2 border border-light overflow-auto">
+              {post?.post.media.map((media, index) => (
+                <OptimizedImage
+                  key={index}
+                  src={media.url}
+                  height={500}
+                  width={1000}
+                  alt={`Story ${post.post.id}`}
+                />
+                // <Image
+                //   key={index}
+                //   src={media.url}
+                //   height={500}
+                //   width={1000}
+                //   alt={`Story ${post.post.id}`}
+                //   priority={true}
+                //   placeholder="blur"
+                //   blurDataURL={BLURURL}
+                // />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

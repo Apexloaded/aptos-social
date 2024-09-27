@@ -1,10 +1,13 @@
 import { InputTransactionData } from '@aptos-labs/wallet-adapter-react';
 import {
   add_comment,
+  collect_post,
   create_collection,
+  downvote_post,
   like,
   mint_post,
   unlike,
+  upvote_post,
 } from '../aptos.function';
 import { INewCollection } from '@/interfaces/collection.interface';
 import { IAddComment, INewPost } from '@/interfaces/feed.interface';
@@ -48,6 +51,7 @@ export const mintPost = (args: INewPost): InputTransactionData => {
     media_mimetypes,
     metadata_uri,
     collection_obj,
+    is_nft_post,
   } = args;
   return {
     data: {
@@ -60,6 +64,7 @@ export const mintPost = (args: INewPost): InputTransactionData => {
         media_mimetypes,
         metadata_uri,
         collection_obj,
+        is_nft_post,
       ],
     },
   };
@@ -91,6 +96,37 @@ export const unlikePost = (post_id: number): InputTransactionData => {
     data: {
       function: unlike,
       typeArguments: [],
+      functionArguments: [post_id],
+    },
+  };
+};
+
+export const upVotePost = (post_id: number): InputTransactionData => {
+  return {
+    data: {
+      function: upvote_post,
+      typeArguments: [],
+      functionArguments: [post_id],
+    },
+  };
+};
+
+export const downVotePost = (post_id: number): InputTransactionData => {
+  console.log('post id:', post_id);
+  return {
+    data: {
+      function: downvote_post,
+      typeArguments: [],
+      functionArguments: [post_id],
+    },
+  };
+};
+
+export const collectPost = (post_id: number): InputTransactionData => {
+  return {
+    data: {
+      function: collect_post,
+      typeArguments: ['0x1::aptos_coin::AptosCoin'],
       functionArguments: [post_id],
     },
   };

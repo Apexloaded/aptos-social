@@ -5,4 +5,6 @@ export enum QueryKeys {
   Posts = 'posts',
   Comments = 'comments',
   PostDetails = 'postDetails',
+  NFTs = 'nfts',
+  Hashtag = 'hashtag',
 }

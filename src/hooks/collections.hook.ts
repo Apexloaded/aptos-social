@@ -12,6 +12,7 @@ import { aptosClient } from '@/utils/aptosClient';
 import { AccountAddress, GetCollectionDataResponse } from '@aptos-labs/ts-sdk';
 import { ICollection } from '@/interfaces/collection.interface';
 import { useAccount } from '@/context/account.context';
+import { useGetCollectionData } from './collection-data.hook';
 
 export default function useCollections() {
   const [collections, setCollections] = useState<Array<ICollection>>([]);

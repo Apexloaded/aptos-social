@@ -1,4 +1,4 @@
-module aptos_social_host::aptos_social_utils {
+module aptos_social::utils {
     use std::string::{Self, String};
     use std::option::{Self, Option};
     use std::vector;

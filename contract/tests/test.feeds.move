@@ -1,5 +1,5 @@
 #[test_only]
-module aptos_social_host::feeds_test {
+module aptos_social::feeds_test {
     use std::option;
     use std::signer;
     use std::string::{Self, String};
@@ -15,10 +15,10 @@ module aptos_social_host::feeds_test {
 
     use aptos_token_objects::collection::{Self, Collection};
     
-    use aptos_social_host::aptos_social_feeds::{Self, Media, CollectionMetadata, PostItem};
-    use aptos_social_host::profile_test;
+    use aptos_social::feeds::{Self, Media, CollectionMetadata, PostItem};
+    use aptos_social::profile_test;
 
-    #[test(aptos_framework = @0x1, account = @aptos_social_host)]
+    #[test(aptos_framework = @0x1, account = @aptos_social)]
     fun test_create_collection(
         aptos_framework: &signer,
         account: &signer
@@ -26,7 +26,7 @@ module aptos_social_host::feeds_test {
         // current timestamp is 0 after initialization
         timestamp::set_time_has_started_for_testing(aptos_framework);
 
-        aptos_social_feeds::init_module_for_test(account);
+        feeds::init_module_for_test(account);
 
         profile_test::test_register_creator(account, aptos_framework);
         // Test inputs
@@ -40,18 +40,18 @@ module aptos_social_host::feeds_test {
         let banner = option::some(string::utf8(b"ipfs://"));
         let featured = option::some(string::utf8(b"ipfs://"));
 
-        aptos_social_feeds::create_collection(account, name, description, max_supply, custom_id, royalty_percentage, logo, banner, featured);
+        feeds::create_collection(account, name, description, max_supply, custom_id, royalty_percentage, logo, banner, featured);
 
-        let result = aptos_social_feeds::get_global_collections();
+        let result = feeds::get_global_collections();
         let collection_1 = *vector::borrow(&result, vector::length(&result) - 1);
 
-        let metadata = aptos_social_feeds::get_metadata(collection_1);
+        let metadata = feeds::get_metadata(collection_1);
         debug::print<CollectionMetadata>(&metadata);
 
         assert!(vector::length(&result) == 1, 1);
     }
 
-    #[test(account = @aptos_social_host, aptos_framework = @0x1, user1 = @0x200, user2 = @0x201)]
+    #[test(account = @aptos_social, aptos_framework = @0x1, user1 = @0x200, user2 = @0x201)]
     fun test_mint_post(
         account: &signer,
         aptos_framework: &signer,
@@ -66,7 +66,7 @@ module aptos_social_host::feeds_test {
         account::create_account_for_test(user1_addr);
         account::create_account_for_test(user2_addr);
 
-        // aptos_social_feeds::init_module_for_test(account);
+        // feeds::init_module_for_test(account);
 
         // Test inputs
         let token_id = b"token123";
@@ -77,12 +77,15 @@ module aptos_social_host::feeds_test {
         let media_urls = vector::singleton(string::utf8(b"http://example.com/image.png"));
         let media_mimetypes = vector::singleton(string::utf8(b"image/png"));
 
+        let m_vector = vector::empty<Media>();
+        let media = feeds::create_media(string::utf8(b"http://example.com/image.png"), string::utf8(b"image/png"));
+        vector::push_back(&mut m_vector, media);
 
         // debug::print<vector<u8>>(&content);
 
         test_create_collection(aptos_framework, account);
 
-        let result = aptos_social_feeds::get_global_collections();
+        let result = feeds::get_global_collections();
         let collection_1 = *vector::borrow(&result, vector::length(&result) - 1);
 
         // debug::pring<Object<Collection>>(collection_1);
@@ -101,10 +104,10 @@ module aptos_social_host::feeds_test {
 
         // let collection_address = object::object_address(collection_1);
 
-        aptos_social_feeds::mint_post(account, content, price, media_urls, media_mimetypes, metadata_uri, collection_1);
+        feeds::mint_post(account, content, price, media_urls, media_mimetypes, metadata_uri, collection_1, true);
     }
 
-    #[test(account = @aptos_social_host, aptos_framework = @0x1, user1 = @0x200, user2 = @0x201)]
+    #[test(account = @aptos_social, aptos_framework = @0x1, user1 = @0x200, user2 = @0x201)]
     fun test_comment(
         account: &signer,
         aptos_framework: &signer,
@@ -133,16 +136,16 @@ module aptos_social_host::feeds_test {
         let i = 0;
         while(i < 3) {
             let comment = *vector::borrow(&comments, i);
-            aptos_social_feeds::add_comment(account, 1, comment);
+            feeds::add_comment(account, 1, comment);
             i = i + 1;
         };
         
-        let post_comments = aptos_social_feeds::get_comments(1);
+        let post_comments = feeds::get_comments(1);
         debug::print<vector<PostItem>>(&post_comments);
         assert!(vector::length(&post_comments) == 3, 1);
     }
 
-    #[test(account = @aptos_social_host, aptos_framework = @0x1, user1 = @0x200, user2 = @0x201)]
+    #[test(account = @aptos_social, aptos_framework = @0x1, user1 = @0x200, user2 = @0x201)]
     fun test_like_unlike(
         account: &signer,
         aptos_framework: &signer,
@@ -159,15 +162,15 @@ module aptos_social_host::feeds_test {
         account::create_account_for_test(user1_addr);
         account::create_account_for_test(user2_addr);
 
-        aptos_social_feeds::like(account, 1);
+        feeds::like(account, 1);
 
-        let likes = aptos_social_feeds::get_likes(1);
+        let likes = feeds::get_likes(1);
 
         assert!(vector::contains(&likes, &signer::address_of(account)), 300);
 
-        aptos_social_feeds::unlike(account, 1);
+        feeds::unlike(account, 1);
 
-        let unliked = aptos_social_feeds::get_likes(1);
+        let unliked = feeds::get_likes(1);
 
         assert!(vector::length(&unliked) == 0, 2);
     }
