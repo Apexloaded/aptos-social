@@ -3,6 +3,7 @@ import { profile, feeds } from './aptos.module';
 import { AccountAddress } from '@aptos-labs/ts-sdk';
 
 export const register_creator: `${string}::${string}::${string}` = `${MODULE_ADDRESS}::${profile}::register_creator`;
+export const update_creator: `${string}::${string}::${string}` = `${MODULE_ADDRESS}::${profile}::update_creator`;
 export const is_name_take: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${profile}::is_name_taken`;
@@ -12,7 +13,6 @@ export const find_creator: `${string}::${string}::${string}` = `${AccountAddress
 export const find_creator_by_name: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${profile}::find_creator_by_name`;
-
 
 /**
  * Feeds Modules Functions
@@ -59,4 +59,6 @@ export const downvote_post: `${string}::${string}::${string}` = `${AccountAddres
 export const get_posts_by_hashtag: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${feeds}::get_posts_by_hashtag`;
-
+export const get_owned_posts: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::get_owned_posts`;

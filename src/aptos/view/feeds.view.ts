@@ -6,6 +6,7 @@ import {
   get_post_by_id,
   get_feeds,
   get_posts_by_hashtag,
+  get_owned_posts,
 } from '../aptos.function';
 import { ICollection } from '@/interfaces/collection.interface';
 import { IPost, IPostItem } from '@/interfaces/feed.interface';
@@ -77,6 +78,16 @@ export const getPostByHashtag = async (
     payload: {
       function: get_posts_by_hashtag,
       functionArguments: [hashtag],
+    },
+  });
+  return response[0];
+};
+
+export const getOwnedPosts = async (username: string): Promise<IPostItem[]> => {
+  const response = await aptosClient().view<[Array<IPostItem>]>({
+    payload: {
+      function: get_owned_posts,
+      functionArguments: [username],
     },
   });
   return response[0];

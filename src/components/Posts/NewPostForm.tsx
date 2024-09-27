@@ -26,7 +26,7 @@ import { queryClient } from '@/providers/ReactQueryProvider';
 import { QueryKeys } from '@/config/query-keys';
 import { aptosClient } from '@/utils/aptosClient';
 import { mintPost } from '@/aptos/entry/feeds.entry';
-import { amountToApt, APT_DECIMALS } from '@/utils/helpers';
+import { amountToApt, APT_DECIMALS, validateImage } from '@/utils/helpers';
 import { useAccount } from '@/context/account.context';
 import { uploadFile, uploadFiles } from '@/actions/pinata.action';
 import { PinResponse } from 'pinata-web3';
@@ -189,7 +189,7 @@ function NewPostForm({ close }: Props) {
           removeMedia();
           editorRef.current?.clearEditor();
           if (close) close();
-          router.push(routes.app.home);
+          //router.push(routes.app.home);
         }
       }
     } catch (err: any) {
@@ -311,8 +311,7 @@ function NewPostForm({ close }: Props) {
                 isMintable
                   ? {
                       required: 'Please select an image',
-                      validate: (value: any) =>
-                        value && value.type.match('image/(png|jpeg)'),
+                      validate: validateImage
                     }
                   : {}
               }

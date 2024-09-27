@@ -32,7 +32,10 @@ import { PinResponse } from 'pinata-web3';
 import { IPFS_URL, DEFAULT_COLLECTION } from '@/config/constants';
 import { renameFile } from '@/utils/helpers';
 import { createCollection } from '@/aptos/entry/feeds.entry';
-import { InputGenerateTransactionPayloadData } from '@aptos-labs/ts-sdk';
+import {
+  Account,
+  InputGenerateTransactionPayloadData,
+} from '@aptos-labs/ts-sdk';
 import { uploadFile } from '@/actions/pinata.action';
 
 function Welcome() {
@@ -81,6 +84,44 @@ function Welcome() {
     if (mediaRef.current) mediaRef.current.value = '';
   };
 
+  const mintName = async () => {
+    try {
+      if (!account) return;
+      loading({ msg: 'Processing...' });
+      const name = 'aptsocial';
+      const name1Owner = await aptosClient().getOwnerAddress({ name });
+      console.log(name1Owner?.toString());
+      success({
+        msg: 'Committed transaction successfully' + name1Owner?.toString(),
+      });
+      const txn = await aptosClient().registerName({
+        sender: account,
+        name: name,
+        expiration: {
+          policy: 'domain',
+        },
+      });
+      const res = await aptosClient().signAndSubmitTransaction({
+        signer: account,
+        transaction: txn,
+      });
+
+      const committedTransactionResponse =
+        await aptosClient().waitForTransaction({ transactionHash: res.hash });
+
+      if (committedTransactionResponse.success) {
+        success({ msg: 'Committed transaction successfully' });
+        /**
+         * We can now query the name we just registered.
+         */
+        const name1Owner = await aptosClient().getOwnerAddress({ name });
+        console.log(name1Owner?.toString());
+      }
+    } catch (err: any) {
+      error({ msg: err.message || 'Error minting name' });
+    }
+  };
+
   const proceed = async (data: FieldValues) => {
     try {
       if (!mediaFile || !address) return;
@@ -117,10 +158,7 @@ function Welcome() {
         featured_img: `${collectionUrl}/feature.jpg`,
       }).data;
 
-      await signAndSubmitBatchTransaction([
-        registerTx,
-        createColTx,
-      ]);
+      await signAndSubmitBatchTransaction([registerTx, createColTx]);
 
       await completeOnboarding(`${account?.accountAddress.toString()}`);
       success({ msg: 'Profile was successfully created' });
@@ -263,6 +301,9 @@ function Welcome() {
             disabled={isSubmitting || !isValid}
           >
             Mint Profile
+          </Button>
+          <Button onClick={mintName} type="button">
+            Mint Name
           </Button>
         </div>
       </div>

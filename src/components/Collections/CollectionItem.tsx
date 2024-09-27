@@ -21,15 +21,6 @@ export default function CollectionItem({ collection }: Props) {
     queryFn: async () => getCollectionMetadata(collection.collection_id),
   });
 
-  useEffect(() => {
-    if (collRes) {
-      console.log(collRes);
-    }
-  }, [collRes]);
-
-  // useEffect(() => {
-  //   console.log(data);
-  // }, [data]);
 
   return (
     <div className="bg-white dark:bg-dark rounded-xl p-3 h-96">

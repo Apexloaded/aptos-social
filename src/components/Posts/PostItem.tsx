@@ -19,8 +19,12 @@ import { useAccount } from '@/context/account.context';
 import { BLURURL } from '@/config/constants';
 import OptimizedImage from './OptimizedImage';
 import CollectButton from './Buttons/CollectButton';
+import { cn } from '@/lib/utils';
 
-export function PostItem({ post, creator }: IPostItem) {
+interface Props extends IPostItem {
+  className?: string;
+}
+export function PostItem({ post, creator, className }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const username = creator.username;
@@ -44,7 +48,10 @@ export function PostItem({ post, creator }: IPostItem) {
     <div
       onClick={postDetails}
       role="button"
-      className="bg-white dark:bg-dark p-5 rounded-2xl shadow-sm"
+      className={cn(
+        'bg-white dark:bg-dark p-5 rounded-2xl shadow-sm',
+        className
+      )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-x-2">
@@ -76,6 +83,7 @@ export function PostItem({ post, creator }: IPostItem) {
             alt={`Story ${post.id}`}
             height={400}
             width={600}
+            className='object-cover w-full'
           />
           {/* <Image
           src={post.media[0].url}

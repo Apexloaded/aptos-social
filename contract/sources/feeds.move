@@ -53,6 +53,7 @@ module aptos_social::feeds {
         author: address,
         content: String,
         price: u64,
+        owner: address,
         collector: address,
         tip_count: u64,
         media: vector<Media>,
@@ -420,6 +421,7 @@ module aptos_social::feeds {
         let (royalty_addr, royalty_charge) = listing::calculate_royalty(post_listing.listing, price);
         let seller = listing::close(account, post_listing.listing, sender_address);
         post.collector = sender_address;
+        post.owner = sender_address;
         post.is_collectible = false;
         table::remove(&mut state.post_listing, post_id);
 
@@ -517,6 +519,7 @@ module aptos_social::feeds {
         let post = Post {
             id: post_id,
             author: creator_address,
+            owner: creator_address,
             content,
             price,
             collector: @0x0,
@@ -634,7 +637,7 @@ module aptos_social::feeds {
     }
 
     inline fun generate_post_data(post: Post): PostItem {
-        let creator = profile::find_creator(post.author);
+        let creator = profile::find_creator(post.owner);
         PostItem {post, creator}
     }
 
@@ -747,6 +750,27 @@ module aptos_social::feeds {
                 post.hidden == false &&
                 vector::contains(&post.hashtag, &l_hashtag)
             ) {
+                let post_item = generate_post_data(post);
+                vector::push_back(&mut posts, post_item);
+            };
+            i = i + 1;
+        };
+        posts
+    }
+
+    #[view]
+    public fun get_owned_posts(username: String): vector<PostItem> acquires AptosSocialFeedState {
+        let creator_address = profile::username_to_address(username);
+        let state = borrow_global<AptosSocialFeedState>(@aptos_social);
+        let posts_array = state.posts;
+        let posts = vector::empty<PostItem>();
+        let length = vector::length(&posts_array);
+        let i = 0;
+        while (i < length) {
+            let post = *table::borrow(&state.post_item, i+1);
+            let downvotes = vector::length(&post.downvotes);
+            let (_, downvote_threshold) = calculate_threshold(&post);            
+            if(post.owner == creator_address) {
                 let post_item = generate_post_data(post);
                 vector::push_back(&mut posts, post_item);
             };

@@ -24,6 +24,8 @@ import { UserInterface } from '@/interfaces/user.interface';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import ConnectButton from './ConnectButton';
 import EditProfile from './EditProfile';
+import OptimizedImage from '../Posts/OptimizedImage';
+import { DEFAULT_COLLECTION, IPFS_URL } from '@/config/constants';
 
 export type Status = {
   isRequest: boolean;
@@ -88,7 +90,9 @@ function ProfileHeader({ username }: Props) {
         <div className="flex items-center justify-start space-x-2">
           <BackButton />
           <div>
-            <p className="text-xl font-semibold text-dark dark:text-white">{user?.name}</p>
+            <p className="text-xl font-semibold text-dark dark:text-white">
+              {user?.name}
+            </p>
             {user && user.wallet && (
               <p className="text-xs text-dark/70 dark:text-white/80">
                 {formatWalletAddress(user.wallet)}
@@ -100,23 +104,24 @@ function ProfileHeader({ username }: Props) {
       <div className="relative">
         <div className="mx-auto">
           <div className={`h-48 md:h-52 relative w-full`}>
-            <div className="h-full w-full overflow-hidden bg-light">
+            <div className="h-full w-full overflow-hidden bg-secondary">
               {user?.banner ? (
-                <Image
+                <OptimizedImage
                   src={user.banner}
                   height={2500}
                   width={3000}
                   alt={'Banner'}
-                  className={`w-full h-full m-0 flex`}
+                  className={`w-full h-full m-0 flex object-cover`}
                 />
               ) : (
-                <>
-                  <img
-                    src={'/banner/bg.png'}
-                    className={`w-full h-full m-0 flex`}
-                  />
-                  <div className="h-full w-full absolute bg-white/10 inset-0"></div>
-                </>
+                <OptimizedImage
+                  src={`https://${DEFAULT_COLLECTION}.${IPFS_URL}/banner.jpg`}
+                  height={2500}
+                  width={3000}
+                  alt={'Banner'}
+                  className={`w-full h-full m-0 flex object-cover`}
+                  priority={true}
+                />
               )}
               <div
                 className={`h-32 w-32 overflow-hidden rounded-full hover:bg-medium/25 hover:cursor-pointer flex items-center justify-center border-4 ${
@@ -135,7 +140,7 @@ function ProfileHeader({ username }: Props) {
                   </div>
                 )}
                 {user?.pfp ? (
-                  <Image
+                  <OptimizedImage
                     src={user.pfp}
                     height={400}
                     width={400}
@@ -204,7 +209,9 @@ function ProfileHeader({ username }: Props) {
               <div>
                 <div className="flex items-center space-x-1">
                   <div className="max-w-sm truncate">
-                    <p className="font-bold text-lg text-dark dark:text-white">{user?.name}</p>
+                    <p className="font-bold text-lg text-dark dark:text-white">
+                      {user?.name}
+                    </p>
                   </div>
                   <BadgeCheckIcon
                     size={25}
@@ -228,7 +235,10 @@ function ProfileHeader({ username }: Props) {
                     target={'_blank'}
                     className="flex items-center space-x-1"
                   >
-                    <WalletIcon size={18} className="text-dark/70 dark:text-white/80" />
+                    <WalletIcon
+                      size={18}
+                      className="text-dark/70 dark:text-white/80"
+                    />
                     <p className="text-primary text-sm">
                       {formatWalletAddress(user.wallet)}
                     </p>
@@ -240,13 +250,19 @@ function ProfileHeader({ username }: Props) {
                     target={'_blank'}
                     className="flex items-center space-x-1"
                   >
-                    <LinkIcon size={18} className="text-dark/70 dark:text-white/80" />
+                    <LinkIcon
+                      size={18}
+                      className="text-dark/70 dark:text-white/80"
+                    />
                     <p className="text-primary text-sm">{user.website}</p>
                   </Link>
                 )}
 
                 <div className="flex items-center space-x-1">
-                  <Calendar size={18} className="text-dark/70 dark:text-white/80" />
+                  <Calendar
+                    size={18}
+                    className="text-dark/70 dark:text-white/80"
+                  />
                   <p className="text-dark/70 dark:text-white/80 text-sm">
                     Joined{' '}
                     <Moment format="MMM D, YYYY">{user?.created_at}</Moment>

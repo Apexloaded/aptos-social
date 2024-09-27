@@ -13,6 +13,15 @@ import FileSelector from '../ui/fileselector';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { TextArea } from '../ui/textarea';
+import { uploadFiles } from '@/actions/pinata.action';
+import { IUploadFilesResponse } from '@/interfaces/response.interface';
+import { IPFS_URL } from '@/config/constants';
+import { useAccount } from '@/context/account.context';
+import { updateCreator } from '@/aptos/entry/profile.entry';
+import { aptosClient } from '@/utils/aptosClient';
+import { queryClient } from '@/providers/ReactQueryProvider';
+import { QueryKeys } from '@/config/query-keys';
+import { renameFile, validateImage } from '@/utils/helpers';
 
 type Props = {
   user: UserInterface;
@@ -25,7 +34,8 @@ function EditProfile({ user, isOpen, setIsOpen }: Props) {
   const bannerRef = useRef<HTMLInputElement>(null);
   const [banner, setBanner] = useState<File | null>(null);
   const [pfp, setPFP] = useState<File | null>(null);
-  const { loading, error, success } = useToast();
+  const { loading, error, success, updateLoading } = useToast();
+  const { signAndSubmitTransaction } = useAccount();
   const {
     reset,
     trigger,
@@ -35,7 +45,6 @@ function EditProfile({ user, isOpen, setIsOpen }: Props) {
     control,
     formState: { errors, isSubmitting },
   } = useForm({
-    ...editProfileResolver,
     reValidateMode: 'onChange',
     mode: 'onChange',
   });
@@ -44,45 +53,93 @@ function EditProfile({ user, isOpen, setIsOpen }: Props) {
     setIsOpen(false);
   };
 
+  const removeMedia = () => {
+    reset({ pfp: undefined, banner: undefined });
+    setPFP(null);
+    setBanner(null);
+    if (pfpRef.current) pfpRef.current.value = '';
+    if (bannerRef.current) bannerRef.current.value = '';
+  };
+
   const handleCreate = async (data: FieldValues) => {
     try {
-      loading({ msg: 'Uploading profile...' });
+      loading({ msg: 'Processing update...' });
+      const formData = new FormData();
+      const images: File[] = [];
       const { username, name, pfp, banner, bio, website } = data;
-      // const formData = new FormData();
-      // formData.append('username', username);
-      // formData.append('name', name);
-      // formData.append('pfp', pfp);
-      // formData.append('banner', banner);
-      // formData.append('bio', bio);
-      // formData.append('website', website);
-      // const res = await updateProfile(formData);
-      // if (res.status == true) {
-      // await writeContractAsync(
-      //   {
-      //     abi: CreatorABI,
-      //     address: dexaCreator,
-      //     functionName: 'editProfile',
-      //     args: [
-      //       name,
-      //       username,
-      //       res.data.pfpURI,
-      //       res.data.bannerURI,
-      //       bio,
-      //       website,
-      //     ],
-      //   },
-      //   {
-      //     onSuccess: async (data) => {
-      //       success({ msg: 'Profile updated' });
-      //       closeModal();
-      //     },
-      //     onError(err) {
-      //       error({ msg: `${err.message}` });
-      //     },
-      //   }
-      // );
-      // }
+
+      if (pfp) {
+        const file = renameFile(pfp, 'pfp');
+        formData.append('files', file);
+        images.push(file);
+      }
+
+      if (banner) {
+        const file = renameFile(banner, 'banner');
+        formData.append('files', file);
+        images.push(file);
+      }
+
+      let isUploaded = false;
+      let uploadRes: IUploadFilesResponse | null = null;
+      if (images.length > 0) {
+        updateLoading({
+          msg: `Uploading file${images.length > 1 ? 's' : ''}`,
+        });
+        const res = await uploadFiles(formData);
+        if (res.status) {
+          isUploaded = true;
+          uploadRes = res.data;
+        }
+      }
+
+      let profileImg = user.pfp;
+      let bannerImg = user.banner;
+
+      if (isUploaded && uploadRes && uploadRes !== null) {
+        const { pinned, metadata } = uploadRes;
+        const pfpUrl = `https://${pinned.IpfsHash}.${IPFS_URL}`;
+        const bannerUrl = `https://${pinned.IpfsHash}.${IPFS_URL}`;
+        const profilePicture = images.find((img) => img.name.includes('pfp'));
+        const bannerPicture = images.find((img) => img.name.includes('banner'));
+        metadata.forEach((m) => {
+          if (m.id === profilePicture?.name) {
+            profileImg = `${pfpUrl}/${m.fileName}`;
+          }
+          if (m.id === bannerPicture?.name) {
+            bannerImg = `${bannerUrl}/${m.fileName}`;
+          }
+        });
+      }
+
+      updateLoading({ msg: 'Uploading profile...' });
+      const txResponse = await signAndSubmitTransaction(
+        updateCreator({
+          name,
+          username,
+          email: user.email,
+          pfp: profileImg,
+          banner: bannerImg,
+          bio,
+          website,
+        })
+      );
+
+      if (txResponse) {
+        const committedTransactionResponse =
+          await aptosClient().waitForTransaction({
+            transactionHash: txResponse.hash,
+          });
+
+        if (committedTransactionResponse.success) {
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.Profile] });
+          success({ msg: 'Profile updated successfully' });
+          removeMedia();
+          closeModal();
+        }
+      }
     } catch (err: any) {
+      console.log(err);
       if (err instanceof Error) {
         error({ msg: err.message });
       }
@@ -181,7 +238,6 @@ function EditProfile({ user, isOpen, setIsOpen }: Props) {
                             const file = ev.target.files[0];
                             onChange(file);
                             const isValid = await trigger('banner');
-                            console.log(file);
                             if (isValid) setBanner(file);
                           }
                         }}
@@ -200,6 +256,13 @@ function EditProfile({ user, isOpen, setIsOpen }: Props) {
                     </>
                   )}
                   name={'banner'}
+                  rules={
+                    !user.banner
+                      ? {
+                          validate: validateImage,
+                        }
+                      : {}
+                  }
                 />
                 <Button
                   type={'button'}
@@ -242,6 +305,13 @@ function EditProfile({ user, isOpen, setIsOpen }: Props) {
                     </>
                   )}
                   name={'pfp'}
+                  rules={
+                    !user.pfp
+                      ? {
+                          validate: validateImage,
+                        }
+                      : {}
+                  }
                 />
                 {pfp ? (
                   <div className="absolute h-full w-full rounded-full z-0">
@@ -281,6 +351,7 @@ function EditProfile({ user, isOpen, setIsOpen }: Props) {
                       </Label>
                     </div>
                   )}
+                  rules={{ required: 'Userame is required', min: 3 }}
                   name={'username'}
                   defaultValue={user.username}
                 />
@@ -308,6 +379,7 @@ function EditProfile({ user, isOpen, setIsOpen }: Props) {
                     </div>
                   )}
                   name={'name'}
+                  rules={{ required: 'Enter your display name', min: 3 }}
                   defaultValue={user.name}
                 />
                 {errors.name && <ShowError error={errors.name.message} />}

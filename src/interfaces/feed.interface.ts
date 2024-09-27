@@ -9,6 +9,7 @@ export interface IPost {
   id: number;
   author: string;
   collector: string;
+  owner: string;
   token_obj: { inner: string };
   content: string;
   created_at: string;

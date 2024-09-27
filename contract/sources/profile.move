@@ -11,6 +11,7 @@ module aptos_social::profile {
     use aptos_framework::timestamp;
 
     use aptos_social::utils;
+    friend aptos_social::feeds;
 
     // Error codes
     const ERROR_INVALID_STRING: u64 = 0;
@@ -118,7 +119,7 @@ module aptos_social::profile {
     }
 
     // Update creator information
-    public fun update_creator(
+    public entry fun update_creator(
         creator: &signer,
         name: String,
         username: String,
@@ -201,6 +202,16 @@ module aptos_social::profile {
 
         let creator_address = table::borrow(&state.usernames, lower_username);
         *table::borrow(&state.creators, *creator_address)
+    }
+
+    #[view]
+    public(friend) fun username_to_address(username: String): address acquires AptosSocialProfileState {
+        let state = borrow_global<AptosSocialProfileState>(@aptos_social);
+        let lower_username = utils::to_lowercase(&username);
+
+        assert!(table::contains(&state.usernames, lower_username), ERROR_NOT_FOUND);
+
+        *table::borrow(&state.usernames, lower_username)
     }
 
     #[view]

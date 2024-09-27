@@ -1,8 +1,8 @@
-import React from "react";
-import BlueCheckMark from "./BlueCheck";
-import { routes } from "@/routes";
-import Link from "next/link";
-import Moment from "react-moment";
+import React from 'react';
+import BlueCheckMark from './BlueCheck';
+import { routes } from '@/routes';
+import Link from 'next/link';
+import Moment from 'react-moment';
 
 type Props = {
   username?: string;
@@ -11,9 +11,13 @@ type Props = {
 };
 
 function CreatorName({ username, name, createdAt }: Props) {
+  const prevent = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+    e.stopPropagation();
+  };
   return (
     <div className="flex flex-col">
       <Link
+        onClick={prevent}
         href={routes.app.profile(`${username}`)}
         className="flex items-center space-x-1"
       >

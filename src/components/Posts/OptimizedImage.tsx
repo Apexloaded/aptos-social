@@ -28,7 +28,7 @@ export default function OptimizedImage({
   placeholder = 'blur',
   blurDataURL = BLURURL,
   fillContainer = false,
-  maxRetries = 3,
+  maxRetries = 5,
   ...props
 }: OptimizedImageProps) {
   const [isLoading, setLoading] = useState(true);
@@ -56,16 +56,16 @@ export default function OptimizedImage({
     }
   };
 
-  const containerStyle: React.CSSProperties = {
-    aspectRatio: aspectRatio,
-    width: typeof width === 'number' ? `${width}px` : width,
-    height: typeof height === 'number' ? `${height}px` : height,
-  };
+  // const containerStyle: React.CSSProperties = {
+  //   aspectRatio: aspectRatio,
+  //   width: typeof width === 'number' ? `${width}px` : width,
+  //   height: typeof height === 'number' ? `${height}px` : height,
+  // };
 
-  if (!width && !height && !aspectRatio) {
-    containerStyle.width = '100%';
-    containerStyle.height = 'auto';
-  }
+  // if (!width && !height && !aspectRatio) {
+  //   containerStyle.width = '100%';
+  //   containerStyle.height = 'auto';
+  // }
 
   return (
     <Image

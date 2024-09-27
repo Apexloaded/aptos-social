@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = ['sharp', ...config.externals];
+    }
+    return config;
+  },
   async redirects() {
     return [
       {

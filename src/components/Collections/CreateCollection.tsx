@@ -25,6 +25,8 @@ import { routes } from '@/routes';
 import { useRouter } from 'next/navigation';
 import { useAccount } from '@/context/account.context';
 import { IUploadFilesResponse } from '@/interfaces/response.interface';
+import { renameFile } from '@/utils/helpers';
+import { uploadFiles } from '@/actions/pinata.action';
 
 const links = [
   {
@@ -89,18 +91,17 @@ export default function CreateCollection() {
     loading({ msg: 'Processing...' });
     const formData = new FormData();
     const originalFiles: File[] = [data.logo, data.featured, data.banner];
-    const files = renameFiles(originalFiles);
+    const files = initRenameFiles(originalFiles);
     Array.from(files).forEach((file) => {
       formData.append('files', file);
     });
     updateLoading({ msg: 'Uploading profile images...' });
     try {
-      const fileUpload = await fetch('/api/upload/files', {
-        method: 'POST',
-        body: formData,
-      });
-      const uploadRes = await fileUpload.json();
-      const { pinned, metadata } = uploadRes.data as IUploadFilesResponse;
+      const fileUploadRes = await uploadFiles(formData);
+      if (!fileUploadRes.status) {
+        return error({ msg: fileUploadRes.message || 'Error uploading files' });
+      }
+      const { pinned, metadata } = fileUploadRes.data as IUploadFilesResponse;
       const pfpUrl = `https://${pinned.IpfsHash}.${IPFS_URL}`;
 
       updateLoading({ msg: 'Creating collection...' });
@@ -127,8 +128,6 @@ export default function CreateCollection() {
         })
       );
 
-      console.log(response);
-
       if (response) {
         // Wait for the transaction to be commited to chain
         const committedTransactionResponse =
@@ -149,14 +148,11 @@ export default function CreateCollection() {
     }
   };
 
-  const renameFiles = (files: File[]): File[] => {
+  const initRenameFiles = (files: File[]): File[] => {
     const newNames = ['logo', 'featured', 'banner'];
     return files.map((file, index) => {
       if (index < newNames.length) {
-        const fileExtension = file.name.split('.').pop();
-        return new File([file], `${newNames[index]}.${fileExtension}`, {
-          type: file.type,
-        });
+        return renameFile(file, newNames[index]);
       }
       return file;
     });

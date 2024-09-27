@@ -6,17 +6,11 @@ const uid = new ShortUniqueId({
   dictionary: 'hex',
 });
 
-export const amountToApt = (
-  value: number,
-  decimal: number
-) => {
+export const amountToApt = (value: number, decimal: number) => {
   return value * Math.pow(10, decimal);
 };
 
-export const aptToAmount = (
-  value: number,
-  decimal: number
-) => {
+export const aptToAmount = (value: number, decimal: number) => {
   return value / Math.pow(10, decimal);
 };
 
@@ -70,14 +64,27 @@ export const isValidAptosAddress = (address: string) => {
   return typeof address === 'string' && hexRegex.test(address);
 };
 
-export const renameFile = (file: File) => {
+export const renameFile = (file: File, name?: string) => {
   const extension = file.name.split('.').pop();
-  const uuid = uid.stamp(32);
-  const newName = `${uuid}.${extension}`;
+  const filename = name ? name : uid.stamp(32);
+  const newName = `${filename}.${extension}`;
   return new File([file], newName, { type: file.type });
 };
 
 export const timestampToDate = (time: string | number) => {
   const date = new Date(Number(time) * 1000);
   return date;
+};
+
+export const validateImage = (file: File) => {
+  if (!file) {
+    return 'Image is required';
+  }
+  if (!file.type.startsWith('image/')) {
+    return 'File must be an image';
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    return 'Image size should be less than 5MB';
+  }
+  return true;
 };

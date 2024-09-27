@@ -1,4 +1,4 @@
-import { PinResponse } from "pinata-web3";
+import { PinResponse } from 'pinata-web3';
 
 export interface IActionResponse {
   status: boolean;
@@ -10,12 +10,15 @@ export interface ErrorResponse {
   errors: string;
 }
 
+export type IUploadedFilesMetadata = {
+  id: string;
+  fileName: string;
+  contentType: string;
+  originalSize?: number;
+  compressedSize?: number;
+};
 
 export type IUploadFilesResponse = {
   pinned: PinResponse;
-  metadata: {
-    id: string;
-    fileName: string;
-    contentType: string;
-  }[];
+  metadata: IUploadedFilesMetadata[];
 };
