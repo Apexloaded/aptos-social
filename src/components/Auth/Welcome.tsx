@@ -211,8 +211,8 @@ function Welcome() {
         name={'pfp'}
       />
       <div className="text-center mb-4">
-        <p className="text-xl font-bold">Setup your account</p>
-        <p className="text-dark/60 text-base">
+        <p className="text-xl font-bold dark:text-white">Setup your account</p>
+        <p className="text-dark/60 text-base dark:text-white/70">
           Fill in the following information to configure and mint your
           Aptos.Social onchain profile.
         </p>

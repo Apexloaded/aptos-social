@@ -19,6 +19,7 @@ export const routes = {
       index: '/messages',
       message: (address: string) => `/messages/view?u=${address}`,
     },
+    notifications: '/notifications',
     collections: {
       index: '/collections',
       create: '/collections/create',

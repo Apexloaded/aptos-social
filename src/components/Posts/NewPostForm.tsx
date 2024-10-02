@@ -185,6 +185,7 @@ function NewPostForm({ close }: Props) {
 
         if (committedTransactionResponse.success) {
           queryClient.invalidateQueries({ queryKey: [QueryKeys.Posts] });
+          queryClient.invalidateQueries({ queryKey: [QueryKeys.Trends] });
           success({ msg: 'Post minted successfully' });
           removeMedia();
           editorRef.current?.clearEditor();
@@ -193,6 +194,7 @@ function NewPostForm({ close }: Props) {
         }
       }
     } catch (err: any) {
+      console.log(err);
       error({ msg: `Error minting post` });
     }
   };
@@ -311,7 +313,7 @@ function NewPostForm({ close }: Props) {
                 isMintable
                   ? {
                       required: 'Please select an image',
-                      validate: validateImage
+                      validate: validateImage,
                     }
                   : {}
               }

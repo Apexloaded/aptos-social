@@ -33,7 +33,7 @@ function TabsHeader({
     <div
       {...prop}
       onClick={() => onTabChange(value)}
-      className={`py-4 font-medium relative select-none ${bg} text-medium text-sm px-5 flex ${alignClass} items-center justify-center hover:bg-light cursor-pointer ${className}`}
+      className={`py-4 font-medium relative select-none ${bg} text-dark/80 dark:text-secondary text-sm px-5 flex ${alignClass} items-center justify-center hover:bg-light cursor-pointer ${className}`}
     >
       <p className={`${textColor}`}>{title}</p>
       {activeTabId === value && (

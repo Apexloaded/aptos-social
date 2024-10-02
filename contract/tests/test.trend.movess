@@ -1,0 +1,107 @@
+#[test_only]
+module aptos_social::trends_test {
+    use std::signer;
+    use std::string::{Self, String};
+    use std::vector;
+    use aptos_framework::timestamp;
+    use aptos_social::trends;
+
+    // Test adding hashtags and verifying correct frequency increment
+    #[test(account = @aptos_social, aptos_framework = @0x1)]
+    public fun test_increment_hashtags(account: &signer, aptos_framework: &signer) {
+        trends::init_module_for_test(account);
+        timestamp::set_time_has_started_for_testing(aptos_framework);
+
+        // Add the first hashtag
+        let hashtags = vector::empty<String>();
+        vector::push_back(&mut hashtags, string::utf8(b"bitcoin"));
+        trends::update_trending(account, hashtags, vector::empty<String>());
+
+        // Check if #bitcoin was added with frequency 1
+        let trending_hashtags = trends::get_trending_hashtags();
+        let bitcoin = vector::borrow(&trending_hashtags, 0);
+        assert!(bitcoin.keyword == string::utf8(b"bitcoin"), 1);
+        assert!(bitcoin.decayed_frequency == 1, 2);
+
+        // // Add the same hashtag again
+        // let hashtags = vector::empty<String>();
+        // vector::push_back(&mut hashtags, string::utf8(b"bitcoin"));
+        // trends::update_trending(account, hashtags, vector::empty<String>());
+
+        // // Check if #bitcoin frequency is incremented to 2
+        // let trending_hashtags = trends::get_trending_hashtags();
+        // let bitcoin = vector::borrow(&trending_hashtags, 0);
+        // assert!(bitcoin.keyword == string::utf8(b"bitcoin"), 3);
+        // assert!(bitcoin.decayed_frequency == 2, 4);
+    }
+
+    // // Test adding multiple hashtags and verifying their order
+    // #[test(account = @aptos_social)]
+    // public fun test_multiple_hashtags(account: &signer) {
+    //     trends::init_module(&account);
+
+    //     // Add hashtags #bitcoin and #ethereum
+    //     let hashtags = vector::empty<String>();
+    //     vector::push_back(&mut hashtags, String("bitcoin"));
+    //     vector::push_back(&mut hashtags, String("ethereum"));
+    //     trends::update_trending(&account, hashtags, vector::empty<String>());
+
+    //     // Check if both hashtags are added with frequency 1
+    //     let trending_hashtags = trends::get_trending_hashtags();
+    //     let bitcoin = vector::borrow(&trending_hashtags, 0);
+    //     let ethereum = vector::borrow(&trending_hashtags, 1);
+    //     assert!(bitcoin.keyword == String("bitcoin"), 1);
+    //     assert!(bitcoin.decayed_frequency == 1, 2);
+    //     assert!(ethereum.keyword == String("ethereum"), 3);
+    //     assert!(ethereum.decayed_frequency == 1, 4);
+    // }
+
+    // // Test time decay functionality
+    // #[test(account = @aptos_social)]
+    // public fun test_time_decay(account: &signer) {
+    //     trends::init_module(&account);
+
+    //     let hashtags = vector::empty<String>();
+    //     vector::push_back(&mut hashtags, String("bitcoin"));
+
+    //     // Add #bitcoin and record its initial time
+    //     let current_time = timestamp::now_seconds();
+    //     trends::update_trending(&account, hashtags, vector::empty<String>());
+
+    //     // Advance time (simulate time passing)
+    //     let later_time = current_time + 3600; // 1 hour later
+
+    //     // Check decay after some time (frequency should not decay immediately)
+    //     let trending_hashtags = trends::get_trending_hashtags();
+    //     let bitcoin = vector::borrow(&trending_hashtags, 0);
+    //     assert!(bitcoin.keyword == String("bitcoin"), 1);
+    //     assert!(bitcoin.decayed_frequency == 1, 2); // Still 1 because decay happens slower than 1 hour
+
+    //     // Simulate a larger time gap (1 week later)
+    //     let much_later_time = current_time + 604800; // 7 days later
+    //     trends::update_trending(&account, hashtags, vector::empty<String>());
+
+    //     // Check decay after a week (should be applied now)
+    //     let trending_hashtags = trends::get_trending_hashtags();
+    //     let bitcoin = vector::borrow(&trending_hashtags, 0);
+    //     assert!(bitcoin.keyword == String("bitcoin"), 3);
+    //     assert!(bitcoin.decayed_frequency < 1, 4); // Decayed to less than 1 after 7 days
+    // }
+
+    // // Test adding keywords and checking they are treated separately from hashtags
+    // #[test(account = @aptos_social)]
+    // public fun test_keywords(account: &signer) {
+    //     trends::init_module(&account);
+
+    //     // Add keyword "crypto"
+    //     let keywords = vector::empty<String>();
+    //     vector::push_back(&mut keywords, String("crypto"));
+    //     trends::update_trending(&account, vector::empty<String>(), keywords);
+
+    //     // Check if keyword "crypto" is added with frequency 1
+    //     let trending_keywords = trends::get_trending_keywords();
+    //     let crypto = vector::borrow(&trending_keywords, 0);
+    //     assert!(crypto.keyword == String("crypto"), 1);
+    //     assert!(crypto.decayed_frequency == 1, 2);
+    // }
+}

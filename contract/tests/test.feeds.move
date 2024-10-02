@@ -16,6 +16,7 @@ module aptos_social::feeds_test {
     use aptos_token_objects::collection::{Self, Collection};
     
     use aptos_social::feeds::{Self, Media, CollectionMetadata, PostItem};
+    use aptos_social::trends;
     use aptos_social::profile_test;
 
     #[test(aptos_framework = @0x1, account = @aptos_social)]
@@ -27,6 +28,7 @@ module aptos_social::feeds_test {
         timestamp::set_time_has_started_for_testing(aptos_framework);
 
         feeds::init_module_for_test(account);
+        trends::init_module_for_test(account);
 
         profile_test::test_register_creator(account, aptos_framework);
         // Test inputs

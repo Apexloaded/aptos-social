@@ -44,7 +44,7 @@ function ProfileTabs({ username }: Props) {
   }, [userData]);
 
   useEffect(() => {
-    if (data && user) {
+    if (data && data.length > 0 && user) {
       const _posts = data as IPostItem[];
       const filterReplies = sortPostByDate(
         _posts.filter((p) => p.post.is_comment)

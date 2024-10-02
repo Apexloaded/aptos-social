@@ -1,5 +1,5 @@
-import { NETWORK } from "@/config/constants";
-import { Aptos, AptosConfig } from "@aptos-labs/ts-sdk";
+import { NETWORK } from '@/config/constants';
+import { Aptos, AptosConfig, InputViewFunctionData } from '@aptos-labs/ts-sdk';
 
 const aptos = new Aptos(new AptosConfig({ network: NETWORK }));
 

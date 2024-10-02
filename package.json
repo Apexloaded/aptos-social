@@ -41,6 +41,7 @@
     "jose": "^5.9.2",
     "lottie-react": "^2.4.0",
     "lucide-react": "^0.439.0",
+    "ml-matrix": "^6.11.1",
     "mongoose": "^8.6.3",
     "next": "14.2.8",
     "next-auth": "^5.0.0-beta.20",
@@ -56,6 +57,7 @@
     "sharp": "^0.33.5",
     "short-unique-id": "^5.2.0",
     "siwe": "^2.3.2",
+    "svd-js": "^1.1.1",
     "tailwind-merge": "^2.5.2",
     "tailwind-scrollbar-hide": "^1.1.7",
     "yup": "^1.4.0"

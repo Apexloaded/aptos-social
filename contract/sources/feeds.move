@@ -29,6 +29,7 @@ module aptos_social::feeds {
     use aptos_social::events;
     use aptos_social::listing::{Self, Listing};
     use aptos_social::profile::{Self, Creator};
+    use aptos_social::trends;
 
     // Error codes
     const ERROR_INVALID_STRING: u64 = 0;
@@ -320,6 +321,10 @@ module aptos_social::feeds {
             false
         );
 
+        if(vector::length(&hashtags) > 0) {
+            trends::update_trending(account, hashtags, vector::empty<String>());
+        };
+
         // Emit post created event
         events::emit_post_created(
             post_id,
@@ -343,6 +348,7 @@ module aptos_social::feeds {
 
         let parent_post = table::borrow_mut(&mut state.post_item, pid);
         parent_post.comment_count = parent_post.comment_count + 1;
+        profile::log_user_interaction(account, parent_post.author, 4);
 
         let hashtags = utils::extract_hashtags(&comment);
 
@@ -359,6 +365,10 @@ module aptos_social::feeds {
             hashtags,
             true
         );
+
+        if(vector::length(&hashtags) > 0) {
+            trends::update_trending(account, hashtags, vector::empty<String>());
+        };
 
         // Update the post_comments table
         if(!table::contains(&state.post_comments, pid)) {
@@ -390,6 +400,7 @@ module aptos_social::feeds {
 
         assert!(!vector::contains(&post.liked_by, &sender_address), ERROR_DUPLICATE_RESOURCE);
         vector::push_back(&mut post.liked_by, sender_address);
+        profile::log_user_interaction(account, post.author, 1);
     }
 
     public entry fun unlike(account: &signer, post_id: u64) acquires AptosSocialFeedState {
@@ -432,6 +443,7 @@ module aptos_social::feeds {
 
         aptos_account::deposit_coins(seller, coins);
 
+        profile::log_user_interaction(account, post.author, 10);
         events::emit_listing_filled(
             object::object_address(&post_listing.listing),
             seller,
@@ -467,7 +479,9 @@ module aptos_social::feeds {
         if (upvotes >= upvote_threshold) {
             post.featured = true;
             post.hidden = false;
-        }
+        };
+
+        profile::log_user_interaction(account, post.author, 2);
     }
 
     public entry fun downvote_post(account: &signer, post_id: u64) acquires AptosSocialFeedState { 
@@ -496,7 +510,9 @@ module aptos_social::feeds {
         if (downvotes >= downvote_threshold) {
             post.hidden = true;
             post.featured = false;
-        }
+        };
+        
+        profile::log_user_interaction(account, post.author, 0 - 1);
     }
 
     /****************************************************************
@@ -667,6 +683,32 @@ module aptos_social::feeds {
         (base_upvote_threshold, base_downvote_threshold)
     }
 
+    inline fun calculate_trending_score(post: Post): u64 {
+        let upvotes_weight = 3;
+        let downvotes_weight = 1;
+        let tips_weight = 5;
+        let comments_weight = 2; // Weight for comments
+        let time_decay_factor = 2; // A factor to reduce the score over time.
+
+        let upvotes = vector::length(&post.upvotes);
+        let downvotes = vector::length(&post.downvotes);
+        let tips = post.tip_count;
+        let comments = post.comment_count;
+        
+        // The post age in hours (assuming created_at is a timestamp in seconds)
+        let post_age_in_hours = (timestamp::now_seconds() - post.created_at) / 3600;
+
+        // Trending score formula incorporating comment count
+        let trending_score = ((
+            upvotes_weight * upvotes 
+            + tips_weight * tips 
+            + comments_weight * comments)
+            - (downvotes_weight * downvotes))
+            / (time_decay_factor * post_age_in_hours + 1);
+
+        trending_score
+    }
+
 
     /****************************************************************
      * APTOS SOCIAL FEED VIEW FUNCTIONS
@@ -677,6 +719,27 @@ module aptos_social::feeds {
     public fun get_global_collections(): vector<Object<Collection>> acquires AptosSocialFeedState {
         let state = borrow_global<AptosSocialFeedState>(@aptos_social);
         state.collections
+    }
+
+    #[view]
+    public fun get_trending_posts(): vector<PostItem> acquires AptosSocialFeedState {
+        let state = borrow_global<AptosSocialFeedState>(@aptos_social);
+        let posts_array = state.posts;
+        let posts = vector::empty<PostItem>();
+        let length = vector::length(&posts_array);
+        let i = 0;
+        while (i < length) {
+            let post = *table::borrow(&state.post_item, i+1);
+            let trending_score = calculate_trending_score(post);
+
+            // Define a threshold for "trending" (e.g., trending score above 50)
+            if (trending_score > 50) {
+                let post_item = generate_post_data(post);
+                vector::push_back(&mut posts, post_item);
+            };
+            i = i + 1;
+        };
+        posts
     }
 
     #[view]

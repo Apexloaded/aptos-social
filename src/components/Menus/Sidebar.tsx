@@ -61,9 +61,9 @@ export default function Sidebar() {
       title: 'Chats',
       menu: [
         {
-          name: 'Connections',
-          href: routes.app.connections,
-          icon: Users2Icon,
+          name: 'Notifications',
+          href: routes.app.notifications,
+          icon: BellDotIcon,
         },
         {
           name: 'Messages',

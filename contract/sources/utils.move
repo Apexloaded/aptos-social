@@ -3,6 +3,7 @@ module aptos_social::utils {
     use std::option::{Self, Option};
     use std::vector;
 
+    use aptos_std::table::{Self, Table};
     use aptos_std::string_utils;
 
     const UPPERCASE_A: u8 = 65; // ASCII value for 'A'

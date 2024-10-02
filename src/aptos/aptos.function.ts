@@ -1,7 +1,10 @@
 import { MODULE_ADDRESS } from '@/config/constants';
-import { profile, feeds } from './aptos.module';
+import { profile, feeds, trends } from './aptos.module';
 import { AccountAddress } from '@aptos-labs/ts-sdk';
 
+/**
+ * Profile Module Functions
+ */
 export const register_creator: `${string}::${string}::${string}` = `${MODULE_ADDRESS}::${profile}::register_creator`;
 export const update_creator: `${string}::${string}::${string}` = `${MODULE_ADDRESS}::${profile}::update_creator`;
 export const is_name_take: `${string}::${string}::${string}` = `${AccountAddress.from(
@@ -62,3 +65,10 @@ export const get_posts_by_hashtag: `${string}::${string}::${string}` = `${Accoun
 export const get_owned_posts: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${feeds}::get_owned_posts`;
+
+/**
+ * Trends Module Functions
+ */
+export const get_trending_hashtags: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${trends}::get_trending_hashtags`;

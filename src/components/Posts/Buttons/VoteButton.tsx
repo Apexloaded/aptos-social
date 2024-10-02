@@ -9,7 +9,6 @@ import { QueryKeys } from '@/config/query-keys';
 import { ButtonProps } from '../PostButtons';
 
 export function VoteButtons({ post }: ButtonProps) {
-  console.log(post);
   const { address, signAndSubmitTransaction } = useAccount();
 
   // Initial vote state

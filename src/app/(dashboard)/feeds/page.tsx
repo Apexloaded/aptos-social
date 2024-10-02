@@ -1,8 +1,9 @@
-import Aside from "@/components/Layouts/Aside";
-import Container from "@/components/Layouts/Container";
-import Section from "@/components/Layouts/Section";
-import { Posts } from "@/components/Posts/Posts";
-import Header from "@/components/ui/header";
+import Aside from '@/components/Layouts/Aside';
+import Container from '@/components/Layouts/Container';
+import Section from '@/components/Layouts/Section';
+import { Posts } from '@/components/Posts/Posts';
+import Trending from '@/components/Trending';
+import Header from '@/components/ui/header';
 
 export default function Feeds() {
   return (
@@ -15,7 +16,9 @@ export default function Feeds() {
           <Posts />
         </Section>
         <Aside className="pr-3">
-          <div className="flex flex-col gap-y-5 mt-2"></div>
+          <div className="flex flex-col gap-y-5 mt-2">
+            <Trending />
+          </div>
         </Aside>
       </div>
     </Container>

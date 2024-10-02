@@ -7,7 +7,7 @@ import { getApi, postApi } from './api.action';
 import { IActionResponse } from '@/interfaces/response.interface';
 import { routes } from '@/routes';
 import { walletToLowercase } from '@/utils/helpers';
-import Auth, { IAuth } from '@/models/auth.model';
+import { IAuth, Auth } from '@/models/auth.model';
 import { createSession, deleteSession } from '@/lib/session';
 import { Sessions } from '@/config/session.enum';
 import { FilterQuery } from 'mongoose';

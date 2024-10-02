@@ -86,7 +86,7 @@ function ProfileHeader({ username }: Props) {
 
   return (
     <>
-      <div className="py-3 px-2 xl:bg-white/95 dark:bg-dark sticky z-50 top-0">
+      <div className="py-3 px-2 xl:bg-white/95 dark:bg-dark sticky z-10 top-0">
         <div className="flex items-center justify-start space-x-2">
           <BackButton />
           <div>
@@ -269,13 +269,21 @@ function ProfileHeader({ username }: Props) {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center mt-3">
+              <div className="flex items-center mt-3 gap-x-4">
                 <div className="flex items-center space-x-1">
                   <p className="font-extrabold text-sm text-dark dark:text-white">
                     {connections.length}
                   </p>
                   <p className="text-dark/70 dark:text-white/80 text-sm">
-                    Connection{connections.length > 1 ? 's' : ''}
+                    Followers{connections.length > 1 ? 's' : ''}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <p className="font-extrabold text-sm text-dark dark:text-white">
+                    {connections.length}
+                  </p>
+                  <p className="text-dark/70 dark:text-white/80 text-sm">
+                    Following{connections.length > 1 ? 's' : ''}
                   </p>
                 </div>
               </div>

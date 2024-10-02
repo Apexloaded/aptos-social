@@ -7,4 +7,5 @@ export enum QueryKeys {
   PostDetails = 'postDetails',
   NFTs = 'nfts',
   Hashtag = 'hashtag',
+  Trends = 'trends',
 }
