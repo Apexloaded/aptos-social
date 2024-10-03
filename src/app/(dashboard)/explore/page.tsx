@@ -9,12 +9,12 @@ export default function Explore() {
   return (
     <Container>
       <div className="flex space-x-5">
-        <Section className="bg-white dark:bg-dark-light w-full">
+        <Section className="bg-secondary dark:bg-dark w-full">
           <div className="bg-white backdrop-blur-2xl px-4 dark:bg-dark-light/80 mx-auto flex items-center justify-between w-full sticky top-0 z-10">
             <Header title="Explore" isBack={false} />
           </div>
-          <SearchBox className='pb-3' />
-          <TrendingKeywords />
+          <SearchBox className="dark:bg-dark" />
+          <TrendingKeywords className='py-3' />
           <TrendingPosts />
         </Section>
       </div>

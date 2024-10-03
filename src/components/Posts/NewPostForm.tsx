@@ -187,8 +187,7 @@ function NewPostForm({ close }: Props) {
           queryClient.invalidateQueries({ queryKey: [QueryKeys.Posts] });
           queryClient.invalidateQueries({ queryKey: [QueryKeys.Trends] });
           success({ msg: 'Post minted successfully' });
-          removeMedia();
-          editorRef.current?.clearEditor();
+          resetForm();
           if (close) close();
           //router.push(routes.app.home);
         }

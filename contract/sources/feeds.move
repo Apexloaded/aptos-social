@@ -517,7 +517,7 @@ module aptos_social::feeds {
             post.featured = false;
         };
         
-        profile::log_user_interaction(account, post.author, 0 - 1);
+        profile::log_user_interaction(account, post.author, 0);
     }
 
     /****************************************************************

@@ -15,27 +15,45 @@ import { useAccount } from '@/context/account.context';
 import { useGetCollectionData } from './collection-data.hook';
 
 export default function useCollections() {
-  const [collections, setCollections] = useState<Array<ICollection>>([]);
+  //const [collections, setCollections] = useState<Array<ICollection>>([]);
   const { account, connected, address } = useAccount();
 
   const isReady = connected && address !== undefined;
 
-  const { data } = useQuery({
+  // const { data } = useQuery({
+  //   queryKey: [QueryKeys.Collections, address],
+  //   queryFn: async () => getAllCollections(`${address}`),
+  //   enabled: isReady,
+  // });
+
+  const { data: collectionsRegistry } = useQuery({
     queryKey: [QueryKeys.Collections, address],
-    queryFn: async () => getAllCollections(`${address}`),
+    queryFn: async () => {
+      if (!address) return [];
+      return getAllCollections(`${address}`);
+    },
     enabled: isReady,
   });
 
-  useEffect(() => {
-    const init = async () => {
-      if (data) {
-        const objects = await getObjects(data);
-        const collections = await getCollections(objects);
-        setCollections(collections);
-      }
-    };
-    init();
-  }, [data]);
+  // Query for objects using the registry data
+  const { data: objects, isLoading: objectsLoading } = useQuery({
+    queryKey: [QueryKeys.Objects, collectionsRegistry],
+    queryFn: async () => {
+      if (!collectionsRegistry || collectionsRegistry.length === 0) return [];
+      return getObjects(collectionsRegistry);
+    },
+    enabled: !!collectionsRegistry && collectionsRegistry.length > 0,
+  });
+
+  // Query for collections using the objects data
+  const { data: collections, isLoading: collectionsLoading } = useQuery({
+    queryKey: [QueryKeys.CollectionObjects, objects],
+    queryFn: async () => {
+      if (!objects || objects.length === 0) return [];
+      return getCollections(objects);
+    },
+    enabled: !!objects && objects.length > 0,
+  });
 
   const findMetadata = (collectionAddress: string) => {
     return useQuery({
@@ -45,7 +63,7 @@ export default function useCollections() {
     });
   };
 
-  const getObjects = async (registry: [{ inner: string }]) => {
+  const getObjects = async (registry: Array<{ inner: string }>) => {
     const objects = await Promise.all(
       registry.map(async (register: { inner: string }) => {
         const formattedRegistry = AccountAddress.from(

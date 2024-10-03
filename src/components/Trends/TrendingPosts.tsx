@@ -29,13 +29,14 @@ export function TrendingPosts() {
   return (
     <>
       {data && data?.length > 0 && (
-        <div className="mx-auto w-full flex flex-col gap-8 bg-muted dark:bg-dark-light p-5">
+        <div className="mx-auto w-full flex flex-col gap-8 bg-muted dark:bg-dark p-5">
           {data &&
             data.map((post, i) => (
               <PostItem
                 key={post.post.id}
                 post={post.post}
                 creator={post.creator}
+                className='dark:bg-dark-light'
               />
             ))}
         </div>

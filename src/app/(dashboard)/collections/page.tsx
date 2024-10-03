@@ -15,8 +15,8 @@ export default function Collections() {
           isFull={true}
           className="bg-muted dark:bg-dark-light w-full px-1"
         >
-          <div className="bg-muted/80 backdrop-blur-2xl pr-3 dark:bg-dark-light/80 mx-auto flex items-center justify-between w-full sticky top-0 z-10">
-            <Header title="Collections" />
+          <div className="bg-muted/80 backdrop-blur-2xl px-3 dark:bg-dark-light/80 mx-auto flex items-center justify-between w-full sticky top-0 z-10">
+            <Header title="Collections" isBack={false} />
             <Link
               className="bg-primary text-white px-4 py-1 rounded-sm hover:bg-primary/90"
               href={routes.app.collections.create}

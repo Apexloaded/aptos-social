@@ -10,4 +10,6 @@ export enum QueryKeys {
   Trends = 'trends',
   TrendingPosts = 'trendingposts',
   UsersToFollow = 'usersToFollow',
+  Objects = 'objects',
+  CollectionObjects = 'collectionObjects'
 }

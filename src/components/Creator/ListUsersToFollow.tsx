@@ -17,7 +17,7 @@ export default function ListUsersToFollow({ user }: Props) {
     authUser && user ? user.followers.includes(`${authUser?.wallet}`) : false;
 
   return (
-    <div className="flex px-4 items-center justify-between py-4 hover:bg-secondary cursor-pointer">
+    <div className="flex px-4 items-center justify-between py-4 hover:bg-secondary hover:dark:bg-dark-light cursor-pointer">
       <div className="flex items-center gap-x-2">
         <CreatorPFP
           username={user?.username}
@@ -28,12 +28,12 @@ export default function ListUsersToFollow({ user }: Props) {
           <div className="gap-x-2 flex items-center">
             <Link
               href={routes.app.profile(`${user.username}`)}
-              className="font-semibold"
+              className="font-semibold dark:text-white"
             >
               {user?.name}
             </Link>
           </div>
-          <span className="text-dark/70">@{user?.username}</span>
+          <span className="text-dark/70 dark:text-white/60">@{user?.username}</span>
         </div>
       </div>
       <div className="flex items-center gap-x-3">

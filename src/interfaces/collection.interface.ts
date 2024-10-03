@@ -6,6 +6,7 @@ export interface ICollection extends GetCollectionDataResponse {
   banner_img: string;
   featured_img: string;
   custom_id: string;
+  is_default: boolean;
   website: string;
   collection_address: string;
   mint_fee_per_nft_by_stages: Array<any>;

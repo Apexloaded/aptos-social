@@ -7,8 +7,12 @@ import { getTrendingHashtags } from '@/aptos/view/trends.view';
 import { ITrends } from '@/interfaces/trends.interface';
 import Link from 'next/link';
 import { routes } from '@/routes';
+import { cn } from '@/lib/utils';
 
-export default function TrendingKeywords() {
+type Props = {
+  className?: string;
+};
+export default function TrendingKeywords({ className }: Props) {
   const [trends, setTrends] = useState<ITrends[]>([]);
   const { data } = useQuery({
     queryKey: [QueryKeys.Trends],
@@ -26,16 +30,22 @@ export default function TrendingKeywords() {
   }, [data]);
 
   return (
-    <div className="flex flex-col">
+    <div className={cn('flex flex-col bg-white dark:bg-dark-light', className)}>
       {trends.map((trend, i) => (
         <Link
           key={i}
           href={routes.app.hashtag.hashtag(trend.keyword)}
-          className="flex-1 py-2 px-4 hover:bg-secondary"
+          className="flex-1 py-2 px-4 hover:bg-secondary dark:hover:bg-dark/70"
         >
-          <p className="text-dark/70 text-sm">{i + 1} - Trending</p>
-          <p className="lowercase font-semibold">#{trend.keyword}</p>
-          <p className="text-dark/70 text-sm">{trend.decayed_frequency} Frequecy</p>
+          <p className="text-dark/70 dark:text-white/70 text-sm">
+            {i + 1} - Trending
+          </p>
+          <p className="lowercase font-semibold dark:text-white">
+            #{trend.keyword}
+          </p>
+          <p className="text-dark/70 text-sm dark:text-white/70">
+            {trend.decayed_frequency} Frequecy
+          </p>
         </Link>
       ))}
     </div>

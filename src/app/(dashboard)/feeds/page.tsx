@@ -20,7 +20,7 @@ export default function Feeds() {
         </Section>
         <Aside className="">
           <div className="flex flex-col gap-y-6 mt-2">
-            <SearchBox />
+            <SearchBox className='ml-4' />
             <Trending />
             <UsersToFollow />
           </div>
