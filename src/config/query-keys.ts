@@ -8,4 +8,6 @@ export enum QueryKeys {
   NFTs = 'nfts',
   Hashtag = 'hashtag',
   Trends = 'trends',
+  TrendingPosts = 'trendingposts',
+  UsersToFollow = 'usersToFollow',
 }

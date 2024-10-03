@@ -22,7 +22,7 @@ import BackButton from '../ui/back';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { UserInterface } from '@/interfaces/user.interface';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
-import ConnectButton from './ConnectButton';
+import FollowButton from './FollowButton';
 import EditProfile from './EditProfile';
 import OptimizedImage from '../Posts/OptimizedImage';
 import { DEFAULT_COLLECTION, IPFS_URL } from '@/config/constants';
@@ -47,6 +47,8 @@ function ProfileHeader({ username }: Props) {
   const isOwner =
     user?.wallet?.toLowerCase() == authUser?.wallet?.toLowerCase();
   const { data } = findCreator(username);
+  const isFollowing =
+    authUser && user ? user.followers?.includes(`${authUser?.wallet}`) : false;
 
   useEffect(() => {
     if (data) {
@@ -57,32 +59,9 @@ function ProfileHeader({ username }: Props) {
     }
   }, [data]);
 
-  const initChat = () => {
-    // const isMessage = messages.find((m) => m.profile.id == user?.wallet);
-    // if (!isMessage && user) {
-    //   setMessages((prev) => {
-    //     const temp = [...prev];
-    //     const newChat: ChatInterface = {
-    //       profile: {
-    //         id: `${user.wallet}`,
-    //         name: `${user.name}`,
-    //         username: `${user.username}`,
-    //         pfp: `${user.pfp}`,
-    //       },
-    //       chats: [],
-    //     };
-    //     temp.push(newChat);
-    //     return temp;
-    //   });
-    // }
-    // router.push(routes.app.messages.message(`${user?.wallet}`));
-  };
+  const initChat = () => {};
 
-  const liveStream = () => {
-    // const wallet = walletToLowercase(`${user?.wallet}`);
-    // const encrypted = encryptMessage(wallet);
-    // router.push(routes.app.watch(`${encodeURIComponent(encrypted)}`));
-  };
+  const liveStream = () => {};
 
   return (
     <>
@@ -192,8 +171,12 @@ function ProfileHeader({ username }: Props) {
               >
                 <HandCoinsIcon size={18} />
               </Button>
-              {status && !status.isAccepted ? (
-                <ConnectButton to={`${user?.wallet}`} status={status} />
+              {!isFollowing ? (
+                <FollowButton
+                  to={`${user?.wallet}`}
+                  isFollowing={isFollowing}
+                  className='rounded-full'
+                />
               ) : (
                 <Button onClick={initChat} type="button" className="text-sm">
                   <div className="flex items-center gap-x-2">
@@ -219,7 +202,12 @@ function ProfileHeader({ username }: Props) {
                   />
                 </div>
                 <p className="text-primary -mt-1 text-sm font-normal truncate max-w-[10rem]">
-                  @{user?.username}
+                  @{user?.username}{' '}
+                  {isFollowing && (
+                    <span className="bg-secondary text-xs/5 text-dark/70 px-1">
+                      follows
+                    </span>
+                  )}
                 </p>
               </div>
               {user?.bio && (
@@ -272,18 +260,18 @@ function ProfileHeader({ username }: Props) {
               <div className="flex items-center mt-3 gap-x-4">
                 <div className="flex items-center space-x-1">
                   <p className="font-extrabold text-sm text-dark dark:text-white">
-                    {connections.length}
+                    {user?.followers?.length}
                   </p>
                   <p className="text-dark/70 dark:text-white/80 text-sm">
-                    Followers{connections.length > 1 ? 's' : ''}
+                    Followers{user && user?.followers?.length > 1 ? 's' : ''}
                   </p>
                 </div>
                 <div className="flex items-center space-x-1">
                   <p className="font-extrabold text-sm text-dark dark:text-white">
-                    {connections.length}
+                    {user?.following?.length}
                   </p>
                   <p className="text-dark/70 dark:text-white/80 text-sm">
-                    Following{connections.length > 1 ? 's' : ''}
+                    Following{user && user?.following?.length > 1 ? 's' : ''}
                   </p>
                 </div>
               </div>

@@ -4,7 +4,8 @@ export interface UserInterface {
   username?: string;
   wallet?: string;
   email?: string;
-  friends?: string[];
+  followers: string[];
+  following: string[];
   is_verified?: boolean;
   bio?: string;
   banner?: string;

@@ -44,7 +44,12 @@ module aptos_social::feeds {
         mimetype: String,
     }
 
-    struct PostItem has key, store, drop {
+    struct TrendingPost has drop, copy {
+        score: u64,
+        post: PostItem
+    }
+
+    struct PostItem has key, store, drop, copy {
         creator: Creator,
         post: Post,
     }
@@ -696,7 +701,7 @@ module aptos_social::feeds {
         let comments = post.comment_count;
         
         // The post age in hours (assuming created_at is a timestamp in seconds)
-        let post_age_in_hours = (timestamp::now_seconds() - post.created_at) / 3600;
+        let post_age_in_hours = (timestamp::now_seconds() - post.created_at) / 86400;
 
         // Trending score formula incorporating comment count
         let trending_score = ((
@@ -707,6 +712,36 @@ module aptos_social::feeds {
             / (time_decay_factor * post_age_in_hours + 1);
 
         trending_score
+    }
+
+    inline fun sort_by_trending_score(trending: &mut vector<TrendingPost>) {
+        let len = vector::length(trending);
+        
+        if (len > 1) {
+            let swapped = true;
+
+            // Use a flag to determine if a swap occurred
+            while (swapped) {
+                swapped = false;  // Reset swapped to false at the start of each iteration
+
+                let i = 0;
+                while (i < len - 1) {
+                    let current = vector::borrow(trending, i);
+                    let next = vector::borrow(trending, i + 1);
+
+                    if (current.score < next.score) {
+                        // Swap elements if next has a higher score
+                        let temp = *current;
+                        *vector::borrow_mut(trending, i) = *next;
+                        *vector::borrow_mut(trending, i + 1) = temp;
+
+                        // Mark that a swap has happened
+                        swapped = true;
+                    };
+                    i = i + 1;
+                }
+            }
+        }
     }
 
 
@@ -722,10 +757,10 @@ module aptos_social::feeds {
     }
 
     #[view]
-    public fun get_trending_posts(): vector<PostItem> acquires AptosSocialFeedState {
+    public fun get_trending_posts(): vector<TrendingPost> acquires AptosSocialFeedState {
         let state = borrow_global<AptosSocialFeedState>(@aptos_social);
         let posts_array = state.posts;
-        let posts = vector::empty<PostItem>();
+        let posts = vector::empty<TrendingPost>();
         let length = vector::length(&posts_array);
         let i = 0;
         while (i < length) {
@@ -733,12 +768,17 @@ module aptos_social::feeds {
             let trending_score = calculate_trending_score(post);
 
             // Define a threshold for "trending" (e.g., trending score above 50)
-            if (trending_score > 50) {
+            if (trending_score > 5) {
                 let post_item = generate_post_data(post);
-                vector::push_back(&mut posts, post_item);
+                let trending_post = TrendingPost {
+                    score: trending_score,
+                    post: post_item
+                };
+                vector::push_back(&mut posts, trending_post);
             };
             i = i + 1;
         };
+        sort_by_trending_score(&mut posts);
         posts
     }
 

@@ -1,5 +1,5 @@
 import { InputTransactionData } from '@aptos-labs/wallet-adapter-react';
-import { register_creator, update_creator } from '../aptos.function';
+import { follow, register_creator, unfollow, update_creator } from '../aptos.function';
 import { INewUser, UserInterface } from '@/interfaces/user.interface';
 
 export const registerCreator = (args: INewUser): InputTransactionData => {
@@ -22,6 +22,26 @@ export const updateCreator = (
       function: update_creator,
       typeArguments: [],
       functionArguments: [name, username, email, pfp, banner, bio, website],
+    },
+  };
+};
+
+export const followUser = (address: string): InputTransactionData => {
+  return {
+    data: {
+      function: follow,
+      typeArguments: [],
+      functionArguments: [address],
+    },
+  };
+};
+
+export const unfollowUser = (address: string): InputTransactionData => {
+  return {
+    data: {
+      function: unfollow,
+      typeArguments: [],
+      functionArguments: [address],
     },
   };
 };

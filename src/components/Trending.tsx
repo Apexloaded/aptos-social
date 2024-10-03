@@ -17,7 +17,6 @@ export default function Trending() {
 
   useEffect(() => {
     if (data) {
-      console.log(data);
       const filteredTrends = data
         .filter((t) => t.decayed_frequency > 0)
         .sort((a, b) => b.decayed_frequency - a.decayed_frequency)
@@ -27,21 +26,25 @@ export default function Trending() {
   }, [data]);
 
   return (
-    <div>
-      <p className="text-dark dark:text-white mb-3 text-xl font-semibold">
-        Trending Topic
-      </p>
-      <div className="flex flex-wrap gap-x-3 gap-y-3">
-        {trends.map((trend, i) => (
-          <Link
-            key={i}
-            href={routes.app.hashtag.hashtag(trend.keyword)}
-            className="bg-secondary rounded-full px-3 py-1"
-          >
-            <p className="text-sm lowercase">#{trend.keyword}</p>
-          </Link>
-        ))}
-      </div>
+    <div className='px-4'>
+      {trends.length > 0 && (
+        <>
+          <p className="text-dark dark:text-white mb-3 text-xl font-semibold">
+            Trending topics
+          </p>
+          <div className="flex flex-wrap gap-x-3 gap-y-3">
+            {trends.map((trend, i) => (
+              <Link
+                key={i}
+                href={routes.app.hashtag.hashtag(trend.keyword)}
+                className="bg-secondary rounded-full px-3 py-1"
+              >
+                <p className="text-sm lowercase">#{trend.keyword}</p>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

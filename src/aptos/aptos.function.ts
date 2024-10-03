@@ -16,6 +16,15 @@ export const find_creator: `${string}::${string}::${string}` = `${AccountAddress
 export const find_creator_by_name: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${profile}::find_creator_by_name`;
+export const recommend_users_to_follow: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${profile}::recommend_users_to_follow`;
+export const follow: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${profile}::follow`;
+export const unfollow: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${profile}::unfollow`;
 
 /**
  * Feeds Modules Functions
@@ -38,6 +47,9 @@ export const collect_post: `${string}::${string}::${string}` = `${AccountAddress
 export const get_feeds: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${feeds}::get_feeds`;
+export const get_trending_posts: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${feeds}::get_trending_posts`;
 export const get_post_by_id: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${feeds}::get_post_by_id`;

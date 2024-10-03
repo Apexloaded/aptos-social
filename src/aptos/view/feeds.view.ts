@@ -7,9 +7,10 @@ import {
   get_feeds,
   get_posts_by_hashtag,
   get_owned_posts,
+  get_trending_posts,
 } from '../aptos.function';
 import { ICollection } from '@/interfaces/collection.interface';
-import { IPost, IPostItem } from '@/interfaces/feed.interface';
+import { IPost, IPostItem, TrendingPost } from '@/interfaces/feed.interface';
 
 export const getAllCollections = async (
   address: string
@@ -45,6 +46,16 @@ export const getAllPosts = async (): Promise<IPostItem[]> => {
   const response = await aptosClient().view<[Array<IPostItem>]>({
     payload: {
       function: get_feeds,
+      functionArguments: [],
+    },
+  });
+  return response[0];
+};
+
+export const getTrendingPosts = async (): Promise<TrendingPost[]> => {
+  const response = await aptosClient().view<[Array<TrendingPost>]>({
+    payload: {
+      function: get_trending_posts,
       functionArguments: [],
     },
   });

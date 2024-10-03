@@ -3,6 +3,7 @@ import {
   find_creator,
   find_creator_by_name,
   is_name_take,
+  recommend_users_to_follow,
 } from '../aptos.function';
 import { UserInterface } from '@/interfaces/user.interface';
 
@@ -36,4 +37,14 @@ export const getUserByName = async (name: string): Promise<UserInterface> => {
     },
   });
   return response[0] as UserInterface;
+};
+
+export const getUsersToFollow = async (address: string): Promise<UserInterface[]> => {
+  const response = await aptosClient().view<[Array<UserInterface>]>({
+    payload: {
+      function: recommend_users_to_follow,
+      functionArguments: [address],
+    },
+  });
+  return response[0] as UserInterface[];
 };

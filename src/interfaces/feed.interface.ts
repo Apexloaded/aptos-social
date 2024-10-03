@@ -30,6 +30,7 @@ export interface IPost {
 export interface IPostItem {
   post: IPost;
   creator: UserInterface;
+  score?: number;
 }
 
 export interface INewPost {
@@ -45,4 +46,9 @@ export interface INewPost {
 export interface IAddComment {
   post_id: number;
   comment: string;
+}
+
+export interface TrendingPost {
+  post: IPostItem;
+  score: number;
 }

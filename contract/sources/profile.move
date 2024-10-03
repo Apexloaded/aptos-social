@@ -170,7 +170,7 @@ module aptos_social::profile {
         creator.updated_at = timestamp::now_seconds();
     }
 
-    public fun follow(
+    public entry fun follow(
         creator: &signer,
         friend_address: address
     ) acquires AptosSocialProfileState {
@@ -184,9 +184,12 @@ module aptos_social::profile {
         // Add friend to following list
         let creator_ref = table::borrow_mut(&mut state.creators, creator_address);
         vector::push_back(&mut creator_ref.following, friend_address);
+
+        let friend_ref = table::borrow_mut(&mut state.creators, friend_address);
+        vector::push_back(&mut friend_ref.followers, creator_address);
     }
 
-    public fun unfollow(
+    public entry fun unfollow(
         creator: &signer,
         friend_address: address
     ) acquires AptosSocialProfileState {
@@ -199,9 +202,14 @@ module aptos_social::profile {
 
         // Remove friend from following list
         let creator_ref = table::borrow_mut(&mut state.creators, creator_address);
-        let (is_found, index) = vector::index_of(&creator_ref.following, &friend_address);
-        assert!(is_found, ERROR_PROCESS_FAILED);
+        let (is_following, index) = vector::index_of(&creator_ref.following, &friend_address);
+        assert!(is_following, ERROR_PROCESS_FAILED);
         vector::remove(&mut creator_ref.following, index);
+
+        let friend_ref = table::borrow_mut(&mut state.creators, friend_address);
+        let (is_follower, index) = vector::index_of(&friend_ref.followers, &creator_address);
+        assert!(is_follower, ERROR_PROCESS_FAILED);
+        vector::remove(&mut friend_ref.followers, index);
     }
 
     public fun log_user_interaction(
@@ -261,8 +269,9 @@ module aptos_social::profile {
     #[view]
     public fun recommend_users_to_follow(
         account_addr: address
-    ): vector<address> acquires AptosSocialProfileState {
+    ): vector<Creator> acquires AptosSocialProfileState {
         let state = borrow_global<AptosSocialProfileState>(@aptos_social);
+        let follower = table::borrow(&state.creators, account_addr);
 
         // Step 1: Get interactions for the user
         let interactions = if (table::contains(&state.user_interactions, account_addr)) {
@@ -293,7 +302,11 @@ module aptos_social::profile {
 
                 // Skip if the user is already following this person
                 let user_creator = table::borrow(&state.creators, account_addr);
-                if (!vector::contains(&followed_creator.followers, &potential_follow)) {
+                if (
+                    !vector::contains(&followed_creator.followers, &potential_follow) && 
+                    !vector::contains(&follower.following, &potential_follow) &&
+                    potential_follow != account_addr
+                ) {
                     // Step 6: Check if the potential follow is already in suggestion_scores
                     let score_found = false;
                     let existing_score = 0;
@@ -369,17 +382,21 @@ module aptos_social::profile {
         sort_by_value(&mut suggestion_scores);
 
         // Step 8: Extract the addresses from the sorted suggestion_scores
-        let sorted_recommendations = vector::empty<address>();
+        let creators = vector::empty<Creator>();
+        //let sorted_recommendations = vector::empty<address>();
         let suggestion_length = vector::length(&suggestion_scores);
         let k = 0;
         while (k < suggestion_length) {
             let suggestion = *vector::borrow(&suggestion_scores, k);
-            vector::push_back(&mut sorted_recommendations, suggestion.addr);
+            let creator = table::borrow(&state.creators, suggestion.addr);
+            vector::push_back(&mut creators, *creator);
+            //vector::push_back(&mut sorted_recommendations, suggestion.addr);
             k = k + 1;
         };
 
         // Step 9: Return the sorted recommendations
-        sorted_recommendations
+        //sorted_recommendations
+        creators
     }
 
     #[view]
