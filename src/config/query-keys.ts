@@ -11,5 +11,9 @@ export enum QueryKeys {
   TrendingPosts = 'trendingposts',
   UsersToFollow = 'usersToFollow',
   Objects = 'objects',
-  CollectionObjects = 'collectionObjects'
+  CollectionObjects = 'collectionObjects',
+  AccountBalance = 'accountBalance',
+  NFTMetadata = 'nftMetadata',
+  Transactions = 'transactions',
+  FungibleAssets = 'fungibleassets',
 }

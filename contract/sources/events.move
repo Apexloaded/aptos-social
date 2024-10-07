@@ -107,4 +107,23 @@ module aptos_social::events {
         });
     }
 
+    #[event]
+    struct PaymentSent has drop, store {
+        sender: address,
+        recipient: address,
+        amount: u64,
+    }
+
+    public(friend) fun emit_payment_sent(
+        sender: address,
+        recipient: address,
+        amount: u64,
+    ) {
+        event::emit(PaymentSent {
+            sender,
+            recipient,
+            amount,
+        });
+    }
+
 }

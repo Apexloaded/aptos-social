@@ -95,5 +95,5 @@ export default function useCollections() {
     return collections;
   };
 
-  return { collections, findMetadata };
+  return { collections: collections ? collections : [], findMetadata };
 }

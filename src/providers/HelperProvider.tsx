@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertModal } from "@/components/AlertModal";
 import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
 import { Toaster } from "react-hot-toast";
 

@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import sidebarReducer from "./slices/sidebar/sidebar.slice";
 import postSelectedReducer from "./slices/posts/post-selected.slice";
 import authReducer from "./slices/account/auth.slice";
+import hideBalanceReducer from './slices/account/hide-balance.slice';
 
 export const store = configureStore({
   reducer: {
-    "auth": authReducer,
+    auth: authReducer,
     sidebar: sidebarReducer,
-    "post-selected": postSelectedReducer,
+    'post-selected': postSelectedReducer,
+    'hide-balance': hideBalanceReducer,
   },
 });
 

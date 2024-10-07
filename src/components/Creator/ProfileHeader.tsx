@@ -9,6 +9,8 @@ import {
   BellIcon,
   Calendar,
   Camera,
+  CheckCheck,
+  CopyIcon,
   HandCoinsIcon,
   LinkIcon,
   MessageSquareShare,
@@ -25,7 +27,10 @@ import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import FollowButton from './FollowButton';
 import EditProfile from './EditProfile';
 import OptimizedImage from '../Posts/OptimizedImage';
-import { DEFAULT_COLLECTION, IPFS_URL } from '@/config/constants';
+import { DEFAULT_COLLECTION, EXPLORER, IPFS_URL, NETWORK } from '@/config/constants';
+import useClipBoard from '@/hooks/clipboard.hook';
+import CopyLink from './CopyLink';
+import { routes } from '@/routes';
 
 export type Status = {
   isRequest: boolean;
@@ -37,6 +42,7 @@ type Props = {
 };
 function ProfileHeader({ username }: Props) {
   const { user: authUser, findCreator } = useAuth();
+  const { copy, isCopied } = useClipBoard();
   const { account } = useWallet();
   const router = useRouter();
   const [user, setUser] = useState<UserInterface>();
@@ -175,7 +181,7 @@ function ProfileHeader({ username }: Props) {
                 <FollowButton
                   to={`${user?.wallet}`}
                   isFollowing={isFollowing}
-                  className='rounded-full'
+                  className="rounded-full"
                 />
               ) : (
                 <Button onClick={initChat} type="button" className="text-sm">
@@ -218,19 +224,10 @@ function ProfileHeader({ username }: Props) {
 
               <div className="mt-3 flex items-center gap-x-3 flex-wrap">
                 {user && user.wallet && (
-                  <Link
-                    href=""
-                    target={'_blank'}
-                    className="flex items-center space-x-1"
-                  >
-                    <WalletIcon
-                      size={18}
-                      className="text-dark/70 dark:text-white/80"
-                    />
-                    <p className="text-primary text-sm">
-                      {formatWalletAddress(user.wallet)}
-                    </p>
-                  </Link>
+                  <CopyLink
+                    textToCopy={user.wallet}
+                    href={`${EXPLORER}/account/${user.wallet}/transactions?network=${NETWORK}`}
+                  />
                 )}
                 {user?.website && (
                   <Link

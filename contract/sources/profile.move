@@ -7,10 +7,13 @@ module aptos_social::profile {
     use aptos_std::table::{Self, Table};
     use aptos_std::debug;
 
+    use aptos_framework::coin::{Self, Coin};
     use aptos_framework::event;
     use aptos_framework::timestamp;
+    use aptos_framework::aptos_account;
 
     use aptos_social::utils;
+    use aptos_social::events;
     friend aptos_social::feeds;
 
     // Error codes
@@ -168,6 +171,20 @@ module aptos_social::profile {
         creator.bio = bio;
         creator.website = website;
         creator.updated_at = timestamp::now_seconds();
+    }
+
+    public entry fun pay<CoinType>(sender: &signer, username: String, amount: u64) acquires AptosSocialProfileState {
+        let sender_address = signer::address_of(sender);
+        let state = borrow_global_mut<AptosSocialProfileState>(@aptos_social);
+        let lowercase_username = utils::to_lowercase(&username);
+
+        assert!(table::contains(&state.usernames, lowercase_username), ERROR_NOT_FOUND);
+        let recipient_address = *table::borrow(&state.usernames, lowercase_username);
+
+        let coins = coin::withdraw<CoinType>(sender, amount);
+        aptos_account::deposit_coins(recipient_address, coins);
+
+        events::emit_payment_sent(sender_address, recipient_address, amount);
     }
 
     public entry fun follow(

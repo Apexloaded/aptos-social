@@ -25,6 +25,9 @@ export const follow: `${string}::${string}::${string}` = `${AccountAddress.from(
 export const unfollow: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${profile}::unfollow`;
+export const pay: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${profile}::pay`;
 
 /**
  * Feeds Modules Functions

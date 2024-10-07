@@ -122,7 +122,7 @@ export function VoteButtons({ post }: ButtonProps) {
           size={20}
           className={cn(
             'text-dark dark:text-white group-hover:text-primary',
-            isUpvoted ? 'stroke-primary text-primary' : ''
+            isUpvoted ? 'stroke-primary text-primary dark:text-primary' : ''
           )}
         />
         <p
@@ -148,7 +148,7 @@ export function VoteButtons({ post }: ButtonProps) {
           size={20}
           className={cn(
             'text-dark dark:text-white group-hover:text-primary',
-            isDownvoted ? 'stroke-primary text-primary' : ''
+            isDownvoted ? 'stroke-primary text-primary dark:text-primary' : ''
           )}
         />
         <p

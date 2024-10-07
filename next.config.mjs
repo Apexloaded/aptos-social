@@ -35,6 +35,11 @@ const nextConfig = {
         hostname: '**.ipfs.dweb.link',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'aptos-names-api-a4ocin5yba-uw.a.run.app',
+        pathname: '**',
+      },
     ],
   },
   experimental: {
