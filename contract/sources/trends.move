@@ -1,13 +1,11 @@
 module aptos_social::trends {
-    use std::option::{Self, Option};
-    use std::signer;
     use std::string::{Self, String};
+    use std::signer;
     use std::vector;
 
     use aptos_std::debug;
 
-    use aptos_framework::timestamp;
-    use aptos_framework::event;
+    use aptos_framework::timestamp; 
 
     friend aptos_social::feeds;
 
@@ -67,7 +65,7 @@ module aptos_social::trends {
                 trend.frequency = trend.frequency + 1;
                 trend.updated_at = current_time; // Update the timestamp to the current time
                 found = true;
-                break;
+                break
             };
             i = i + 1;
         };
@@ -95,7 +93,6 @@ module aptos_social::trends {
 
     // Main function to process posts with hashtags and keywords
     public(friend) fun update_trending(
-        account: &signer,
         hashtags: vector<String>,
         keywords: vector<String>
     ) acquires AptosSocialTrendState {
@@ -151,7 +148,7 @@ module aptos_social::trends {
         let len = vector::length(trending);
         
         if (len == 0) {
-            return; // No need to sort if the vector is empty
+            return // No need to sort if the vector is empty
         };
 
         let swapped = true;
@@ -207,7 +204,7 @@ module aptos_social::trends {
         vector::push_back(&mut hashtags, string::utf8(b"bitcoin"));
         vector::push_back(&mut hashtags, string::utf8(b"bitcoin"));
         vector::push_back(&mut hashtags, string::utf8(b"bitcoin"));
-        update_trending(account, hashtags, vector::empty<String>());
+        update_trending(hashtags, vector::empty<String>());
 
         // Check if #bitcoin was added with frequency 1
         let trending_hashtags = get_trending_hashtags();
@@ -219,7 +216,7 @@ module aptos_social::trends {
         let hashtags = vector::empty<String>();
         vector::push_back(&mut hashtags, string::utf8(b"bitcoin"));
         vector::push_back(&mut hashtags, string::utf8(b"bitcoin"));
-        update_trending(account, hashtags, vector::empty<String>());
+        update_trending(hashtags, vector::empty<String>());
 
         // Check if #bitcoin frequency is incremented to 2
         let trending_hashtags = get_trending_hashtags();
@@ -272,10 +269,10 @@ module aptos_social::trends {
         assert!(fourth.keyword == string::utf8(b"blockchain"), 103);
 
         // Debugging for clarity (optional, but helpful in complex tests)
-        debug::print(&first.keyword);
-        debug::print(&second.keyword);
-        debug::print(&third.keyword);
-        debug::print(&fourth.keyword);
+        // debug::print(&first.keyword);
+        // debug::print(&second.keyword);
+        // debug::print(&third.keyword);
+        // debug::print(&fourth.keyword);
     }
 
     #[test_only]

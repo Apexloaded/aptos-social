@@ -1,5 +1,5 @@
 import { MODULE_ADDRESS } from '@/config/constants';
-import { profile, feeds, trends } from './aptos.module';
+import { profile, feeds, trends, community } from './aptos.module';
 import { AccountAddress } from '@aptos-labs/ts-sdk';
 
 /**
@@ -87,3 +87,22 @@ export const get_owned_posts: `${string}::${string}::${string}` = `${AccountAddr
 export const get_trending_hashtags: `${string}::${string}::${string}` = `${AccountAddress.from(
   MODULE_ADDRESS
 )}::${trends}::get_trending_hashtags`;
+
+/**
+ * Community Module Functions
+ */
+export const get_community: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${community}::get_community`;
+export const get_owned_community: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${community}::get_owned_communities`;
+export const get_community_public_posts: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${community}::get_community_public_posts`;
+export const get_community_posts: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${community}::get_community_posts`;
+export const create_community: `${string}::${string}::${string}` = `${AccountAddress.from(
+  MODULE_ADDRESS
+)}::${community}::create_community`;

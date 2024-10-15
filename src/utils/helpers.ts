@@ -322,3 +322,5 @@ export function getTransactionAmount(
     ? totalDepositAmount
     : totalWithdrawAmount;
 }
+
+export const RE_DIGIT = new RegExp(/^\d+$/);

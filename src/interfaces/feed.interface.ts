@@ -25,6 +25,13 @@ export interface IPost {
   is_comment: boolean;
   downvotes: string[];
   upvotes: string[];
+  is_community_post: boolean;
+  community: string;
+}
+
+export interface IPaginatedData<T> {
+  data: Array<T>;
+  total_items: number;
 }
 
 export interface IPostItem {

@@ -15,12 +15,19 @@ import Collected from './Collected';
 import EmptyBox from '../EmptyBox';
 import { useAccount } from '@/context/account.context';
 import { UserInterface } from '@/interfaces/user.interface';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 type Props = {
   username: string;
 };
 function ProfileTabs({ username }: Props) {
-  const [activeTab, setActiveTab] = useState('tab1');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('tab') || 'collectibles'
+  );
+
   const [posts, setPosts] = useState<IPostItem[]>([]);
   const [user, setUser] = useState<UserInterface>();
   const [replies, setReplies] = useState<IPostItem[]>([]);
@@ -50,7 +57,9 @@ function ProfileTabs({ username }: Props) {
         _posts.filter((p) => p.post.is_comment)
       );
       const sortedPost = sortPostByDate(
-        _posts.filter((p) => !p.post.is_comment && p.post.author == user?.wallet)
+        _posts.filter(
+          (p) => !p.post.is_comment && p.post.author == user?.wallet
+        )
       );
       const collectedPost = sortPostByDate(
         _posts.filter((p) => p.post.collector == user?.wallet)
@@ -62,6 +71,7 @@ function ProfileTabs({ username }: Props) {
   }, [data, user]);
 
   const onTabChange = (tabId: string) => {
+    router.push(`?tab=${tabId}`, { scroll: false });
     setActiveTab(tabId);
   };
 
@@ -72,55 +82,55 @@ function ProfileTabs({ username }: Props) {
           <TabsList className="border-b border-light overflow-x-auto scrollbar-hide">
             <TabsHeader
               title="Collectibles"
-              value="tab1"
+              value="collectibles"
               activeTabId={activeTab}
               onTabChange={onTabChange}
             />
             <TabsHeader
               title="Collected"
-              value="tab2"
+              value="collected"
               activeTabId={activeTab}
               onTabChange={onTabChange}
             />
             <TabsHeader
               title="Replies"
-              value="tab3"
+              value="replies"
               activeTabId={activeTab}
               onTabChange={onTabChange}
             />
             <TabsHeader
               title="Community"
-              value="tab4"
+              value="community"
               activeTabId={activeTab}
               onTabChange={onTabChange}
             />
             {authUser?.username == username && (
               <TabsHeader
                 title="Tips"
-                value="tab5"
+                value="tips"
                 activeTabId={activeTab}
                 onTabChange={onTabChange}
               />
             )}
           </TabsList>
-          <TabsContent value="tab1" activeTabId={activeTab}>
+          <TabsContent value="collectibles" activeTabId={activeTab}>
             <UserFeeds
               posts={posts}
               title="No collectible found"
               msg={`${username} haven't minted any collectible yet`}
             />
           </TabsContent>
-          <TabsContent value="tab2" activeTabId={activeTab}>
+          <TabsContent value="collected" activeTabId={activeTab}>
             <Collected posts={collected} username={`${username}`} />
           </TabsContent>
-          <TabsContent value="tab3" activeTabId={activeTab}>
+          <TabsContent value="replies" activeTabId={activeTab}>
             <UserFeeds
               posts={replies}
               title="No reply found"
               msg={`${username} have not replied any post yet`}
             />
           </TabsContent>
-          <TabsContent value="tab4" activeTabId={activeTab}>
+          <TabsContent value="community" activeTabId={activeTab}>
             <div>
               <div className="text-center py-20">
                 <EmptyBox
@@ -132,7 +142,7 @@ function ProfileTabs({ username }: Props) {
           </TabsContent>
 
           {authUser?.username == username && (
-            <TabsContent value="tab5" activeTabId={activeTab}>
+            <TabsContent value="tips" activeTabId={activeTab}>
               <div>
                 <div className="text-center py-20">
                   <EmptyBox

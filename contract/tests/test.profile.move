@@ -1,17 +1,17 @@
 #[test_only]
 module aptos_social::profile_test {
-    use std::option;
+    //use std::option;
     use std::signer;
     use std::string;
-    use std::vector;
+    //use std::vector;
 
     use aptos_std::debug;
-    use aptos_std::table::{Self, Table};
+    //use aptos_std::table::{Self, Table};
 
     use aptos_framework::timestamp;
 
-    use aptos_social::feeds::{Self, Media};
-    use aptos_social::profile::{Self, Creator, Recommendation, UserInteraction};
+    //use aptos_social::feeds::{Self, Media};
+    use aptos_social::profile::{Self};
     
     #[test(account = @aptos_social, aptos_framework = @0x1)]
     public fun test_register_creator(account: &signer, aptos_framework: &signer) {
@@ -90,8 +90,8 @@ module aptos_social::profile_test {
         //assert!(vector::contains(&recommendations, &expected_recommendation), 1);
 
         // Step 7: Debug print the recommendations for manual inspection
-        debug::print(&string::utf8(b".............Recommendations............."));
-        debug::print(&recommendations);
+        // debug::print(&string::utf8(b".............Recommendations............."));
+        // debug::print(&recommendations);
     }
 
     // #[test(account = @aptos_social, aptos_framework = @0x1)]

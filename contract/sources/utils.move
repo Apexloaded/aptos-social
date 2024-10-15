@@ -1,16 +1,19 @@
 module aptos_social::utils {
     use std::string::{Self, String};
-    use std::option::{Self, Option};
     use std::vector;
 
-    use aptos_std::table::{Self, Table};
-    use aptos_std::string_utils;
+    use aptos_std::math64;
 
     const UPPERCASE_A: u8 = 65; // ASCII value for 'A'
     const UPPERCASE_Z: u8 = 90; // ASCII value for 'Z'
     const LOWERCASE_A: u8 = 97; // ASCII value for 'a'
     const CASE_DIFFERENCE: u8 = 32; // Difference between uppercase and lowercase ASCII values
         
+    struct IPaginatedData<T> {
+        data: vector<T>,
+        total_items: u64
+    }
+
     public fun to_lowercase(s: &String): String {
         let bytes = string::bytes(s);
         let lowercase_bytes = vector::empty<u8>();
@@ -70,5 +73,40 @@ module aptos_social::utils {
         };
 
         hashtags
+    }
+
+    public fun paginate<T: copy + drop>(
+        data: &vector<T>,
+        page: u64,
+        items_per_page: u64
+    ): vector<T> {
+        let total_items = vector::length(data);
+        
+        let start_index = (page - 1) * items_per_page;
+        let end_index = math64::min(start_index + items_per_page, total_items);
+
+        let paginated_data = vector::empty<T>();
+
+        if(start_index >= total_items) {
+            return paginated_data
+        };
+
+        let i = start_index;
+        while(i < end_index) {
+            let item = *vector::borrow(data, i);
+            vector::push_back(&mut paginated_data, item);
+            i = i + 1;
+        };
+
+        paginated_data
+    }
+
+    public fun make_paginated_data<T>(items: vector<T>, total: u64): IPaginatedData<T> {
+        let data = IPaginatedData<T> {
+            data: items,
+            total_items: total
+        };
+
+        data
     }
 }

@@ -5,7 +5,6 @@ import { QueryKeys } from '@/config/query-keys';
 import { useQuery } from '@tanstack/react-query';
 import { useAccount } from '@/context/account.context';
 import { aptosClient } from '@/utils/aptosClient';
-import { MODULE_ADDRESS } from '@/config/constants';
 import { ITransaction } from '@/interfaces/transaction.interface';
 import EmptyBox from '@/components/EmptyBox';
 import TxBodyItems from './TxBodyItems';

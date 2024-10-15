@@ -2,9 +2,12 @@
 
 import React, { useEffect } from 'react';
 import { Button } from '../ui/button';
-import { BellRingIcon, EllipsisIcon, Grid2x2PlusIcon } from 'lucide-react';
-import NFT1 from '@/assets/nft/1.png';
-import Image from 'next/image';
+import {
+  BellRingIcon,
+  EllipsisIcon,
+  Grid2x2PlusIcon,
+  GroupIcon,
+} from 'lucide-react';
 import ShowMore from './ShowMore';
 import { useRouter } from 'next/navigation';
 import { routes } from '@/routes';
@@ -16,10 +19,10 @@ import CreatorName from '../Creator/CreatorName';
 import CreatorPFP from '../Creator/CreatorPFP';
 import { selectPost } from '@/slices/posts/post-selected.slice';
 import { useAccount } from '@/context/account.context';
-import { BLURURL } from '@/config/constants';
 import OptimizedImage from './OptimizedImage';
 import CollectButton from './Buttons/CollectButton';
 import { cn } from '@/lib/utils';
+import CommunityLabel from '../Community/CommunityLabel';
 
 interface Props extends IPostItem {
   className?: string;
@@ -53,6 +56,10 @@ export function PostItem({ post, creator, className }: Props) {
         className
       )}
     >
+      {post.is_community_post && post.community && (
+        <CommunityLabel address={post.community} />
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-x-2">
           <CreatorPFP
@@ -83,7 +90,7 @@ export function PostItem({ post, creator, className }: Props) {
             alt={`Story ${post.id}`}
             height={400}
             width={600}
-            className='object-cover w-full'
+            className="object-cover w-full"
           />
           {/* <Image
           src={post.media[0].url}

@@ -16,4 +16,6 @@ export enum QueryKeys {
   NFTMetadata = 'nftMetadata',
   Transactions = 'transactions',
   FungibleAssets = 'fungibleassets',
+  Community = 'community',
+  CommunityFeeds = 'communityFeeds',
 }

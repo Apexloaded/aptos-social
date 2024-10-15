@@ -1,5 +1,7 @@
-import React from "react";
-import BackButton from "./back";
+'use client';
+
+import React from 'react';
+import BackButton from './back';
 
 type Props = {
   title?: string;
@@ -13,7 +15,7 @@ function Header({ title, isBack = true, children, shiftBtn = false }: Props) {
     <div className="py-3 sticky z-50 top-0">
       <div
         className={`flex items-center justify-start ${
-          shiftBtn ? "space-x-0" : "space-x-2"
+          shiftBtn ? 'space-x-0' : 'space-x-2'
         } `}
       >
         {isBack && <BackButton shiftBtn={shiftBtn} />}

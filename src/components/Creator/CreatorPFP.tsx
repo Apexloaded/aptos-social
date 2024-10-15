@@ -1,8 +1,8 @@
-import Image from "next/image";
-import React, { useEffect } from "react";
-import { getFirstLetters } from "@/utils/helpers";
-import { useRouter } from "next/navigation";
-import { routes } from "@/routes";
+import Image from 'next/image';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { routes } from '@/routes';
+import Identicon from '@polkadot/react-identicon';
 
 type Props = {
   pfp?: string;
@@ -33,17 +33,15 @@ function CreatorPFP({ pfp, username, name, className }: Props) {
           src={pfp}
           height={400}
           width={400}
-          alt={"PFP"}
+          alt={'PFP'}
           placeholder="blur"
           blurDataURL="LEHV6nWB2yk8pyo0adR*.7kCMdnj"
           className="h-10 w-10 rounded-full"
           priority={true}
         />
       ) : (
-        <div className="h-10 w-10 bg-white/90 border border-primary rounded-full flex justify-center items-center">
-          <p className="text-base font-semibold text-primary">
-            {getFirstLetters(`${name}`)}
-          </p>
+        <div className="flex items-center justify-center h-10 w-10 bg-white/90 dark:bg-dark-light">
+          <Identicon value={username} size={32} theme={'ethereum'} />
         </div>
       )}
     </div>

@@ -1,8 +1,8 @@
 #[test_only]
 module aptos_social::test_end_to_end {
-    use std::string::{Self, String};
+    use std::string::{Self};
     use std::vector;
-    use aptos_std::debug;
+    // use aptos_std::debug;
 
     use aptos_social::utils;
 

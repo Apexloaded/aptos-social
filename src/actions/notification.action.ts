@@ -22,16 +22,16 @@ export async function createMentionNotification(content: string) {
         const username = mention.slice(1);
         const mentionedUser = await getUserByName(username);
 
-        if (mentionedUser) {
-          await Notification.create({
-            wallet: mentionedUser.wallet,
-            type: 'mention',
-            content: `${session.user.username} mentioned you in a post`,
-            relatedUserId: session.user.id,
-            relatedPostId: null, // You might want to create a Post model and reference it here
-            read: false,
-          });
-        }
+        // if (mentionedUser) {
+        //   await Notification.create({
+        //     wallet: mentionedUser.wallet,
+        //     type: 'mention',
+        //     content: `${session.user.username} mentioned you in a post`,
+        //     relatedUserId: session.user.id,
+        //     relatedPostId: null, // You might want to create a Post model and reference it here
+        //     read: false,
+        //   });
+        // }
       }
     }
 

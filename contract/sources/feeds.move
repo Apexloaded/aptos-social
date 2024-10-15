@@ -10,26 +10,24 @@ module aptos_social::feeds {
     use aptos_std::debug;
 
     use aptos_framework::aptos_account;
-    use aptos_framework::event;
-    use aptos_framework::coin::{Self, Coin};
-    use aptos_framework::object::{Self, Object, ObjectCore, ExtendRef};
+    use aptos_framework::coin::{Self};
+    use aptos_framework::object::{Self, Object};
     use aptos_framework::timestamp;
-    use aptos_framework::fungible_asset::{Self, MintRef, TransferRef, BurnRef, Metadata, FungibleAsset};
-    use aptos_framework::primary_fungible_store;
 
     use aptos_token_objects::collection::{Self, Collection, MutatorRef};
     use aptos_token_objects::royalty::{Self, Royalty};
     use aptos_token_objects::token::{Self, Token};
 
     use minter::token_components;
-    use minter::mint_stage;
     use minter::collection_components;
 
-    use aptos_social::utils;
+    use aptos_social::utils::{Self, IPaginatedData};
     use aptos_social::events;
     use aptos_social::listing::{Self, Listing};
     use aptos_social::profile::{Self, Creator};
     use aptos_social::trends;
+
+    friend aptos_social::community;
 
     // Error codes
     const ERROR_INVALID_STRING: u64 = 0;
@@ -54,7 +52,7 @@ module aptos_social::feeds {
         post: Post,
     }
     // Post structure
-    struct Post has store, copy, drop {
+    struct Post has key, store, copy, drop {
         id: u64,
         author: address,
         content: String,
@@ -75,6 +73,12 @@ module aptos_social::feeds {
         downvotes: vector<address>,
         hidden: bool,
         featured: bool,
+        is_community_post: bool,
+        community: Option<address>,
+    }
+
+    struct UserPosts has key {
+        posts: vector<address>
     }
 
     struct PostListing has key, store, drop, copy {
@@ -125,8 +129,8 @@ module aptos_social::feeds {
     struct AptosSocialFeedState has key {
         post_count: u64,
         tips_count: u64,
-        posts: vector<Post>,
-        post_item: Table<u64, Post>,
+        posts: vector<address>,
+        post_item: Table<u64, address>,
         post_listing: Table<u64, PostListing>,
         tips: vector<Tips>,
         post_comments: Table<u64, vector<Post>>,
@@ -195,7 +199,7 @@ module aptos_social::feeds {
         let owner_obj_signer = &object::generate_signer(owner_constructor_ref);
 
         let collections = get_global_collections();
-        let collection_id = vector::length(&collections) + 1;
+        let _ = vector::length(&collections) + 1;
         let uri = string::utf8(b"https://aptos.social/collections/");
         string::append(&mut uri, id);
 
@@ -265,42 +269,28 @@ module aptos_social::feeds {
         media_mimetypes: vector<String>,
         metadata_uri: String,
         collection_obj: Object<Collection>,
-        is_nft_post: bool
-    ) acquires AptosSocialFeedState, CollectionConfig, CollectionAccessConfig {
+        is_nft_post: bool,
+    ) acquires CollectionConfig, CollectionAccessConfig, AptosSocialFeedState, UserPosts {
         let creator_address = signer::address_of(account);
-        assert!(string::length(&content) > 0, ERROR_INVALID_STRING);
+        let (is_collectible, post_id, _) = create_post(
+            account,
+            content,
+            price,
+            media_urls,
+            media_mimetypes,
+            metadata_uri,
+            is_nft_post,
+            false,
+            option::none()
+        );
 
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         let collection_config = borrow_global<CollectionConfig>(object::object_address(&collection_obj));
         let access_config_obj = collection_config.collection_access_config;
         let access_config = borrow_global<CollectionAccessConfig>(
             object::object_address(&access_config_obj)
         );
-        
-        assert!(profile::profile_exists(creator_address), ERROR_UNAUTHORISED_ACCESS);
         assert!(access_config.creator == creator_address, ERROR_UNAUTHORISED_ACCESS);
-
-        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
-        let post_id = state.post_count + 1;
-        
-        let hashtags = utils::extract_hashtags(&content);
-
-        let media = vector::empty<Media>();
-        let media_length = vector::length(&media_urls);
-        let i = 0;
-        while (i < media_length) {
-            let url = *vector::borrow(&media_urls, i);
-            let mimetype = *vector::borrow(&media_mimetypes, i);
-            let media_item = create_media(url, mimetype);
-            vector::push_back(&mut media, media_item);
-            i = i + 1;
-        };
-
-        let is_collectible = false;
-        if(media_length > 0) {
-            is_collectible = is_nft_post;
-        } else {
-            is_collectible = false;
-        };
 
         if (is_collectible) {
             let nft = option::some(
@@ -312,24 +302,6 @@ module aptos_social::feeds {
             table::add(&mut state.post_listing, post_id, PostListing { listing });
         };
 
-        let post = store_post(
-            state,
-            post_id,
-            creator_address,
-            content,
-            price,
-            media,
-            metadata_uri,
-            is_collectible,
-            0,
-            hashtags,
-            false
-        );
-
-        if(vector::length(&hashtags) > 0) {
-            trends::update_trending(account, hashtags, vector::empty<String>());
-        };
-
         // Emit post created event
         events::emit_post_created(
             post_id,
@@ -338,11 +310,41 @@ module aptos_social::feeds {
         );
     }
 
+    public(friend) fun mint_community_post(
+        account: &signer,
+        content: String,
+        media_urls: vector<String>,
+        media_mimetypes: vector<String>,
+        community: Option<address>
+    ): (u64, address) acquires AptosSocialFeedState, UserPosts {
+        let creator_address = signer::address_of(account);
+        let (_, post_id, post_address) = create_post(
+            account,
+            content,
+            0,
+            media_urls,
+            media_mimetypes,
+            string::utf8(b""),
+            false,
+            true,
+            community
+        );
+
+        // Emit post created event
+        events::emit_post_created(
+            post_id,
+            creator_address,
+            timestamp::now_seconds()
+        );
+
+        (post_id, post_address)
+    }
+
     public entry fun add_comment(
         account: &signer,
         pid: u64,
         comment: String
-    ) acquires AptosSocialFeedState {
+    ) acquires AptosSocialFeedState, Post, UserPosts {
         let sender_address = signer::address_of(account);
         let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, pid), ERROR_NOT_FOUND);
@@ -351,16 +353,17 @@ module aptos_social::feeds {
 
         let comment_id = state.post_count + 1;
 
-        let parent_post = table::borrow_mut(&mut state.post_item, pid);
+        let parent_post_address = *table::borrow_mut(&mut state.post_item, pid);
+        let parent_post = borrow_global_mut<Post>(parent_post_address);
         parent_post.comment_count = parent_post.comment_count + 1;
         profile::log_user_interaction(account, parent_post.author, 4);
 
         let hashtags = utils::extract_hashtags(&comment);
 
-        let post = store_post(
+        let (_, post) = store_post(
+            account,
             state,
             comment_id,
-            sender_address,
             comment,
             0,
             vector::empty<Media>(),
@@ -368,11 +371,13 @@ module aptos_social::feeds {
             false,
             pid,
             hashtags,
-            true
+            true,
+            false,
+            option::none()
         );
 
         if(vector::length(&hashtags) > 0) {
-            trends::update_trending(account, hashtags, vector::empty<String>());
+            trends::update_trending(hashtags, vector::empty<String>());
         };
 
         // Update the post_comments table
@@ -395,39 +400,43 @@ module aptos_social::feeds {
         );
     }
 
-    public entry fun like(account: &signer, post_id: u64) acquires AptosSocialFeedState {
+    public entry fun like(account: &signer, post_id: u64) acquires AptosSocialFeedState, Post {
         let sender_address = signer::address_of(account);
         let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
         assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
         
-        let post = table::borrow_mut(&mut state.post_item, post_id);
+        let post_address = *table::borrow_mut(&mut state.post_item, post_id);
+        let post = borrow_global_mut<Post>(post_address);
 
         assert!(!vector::contains(&post.liked_by, &sender_address), ERROR_DUPLICATE_RESOURCE);
         vector::push_back(&mut post.liked_by, sender_address);
         profile::log_user_interaction(account, post.author, 1);
     }
 
-    public entry fun unlike(account: &signer, post_id: u64) acquires AptosSocialFeedState {
+    public entry fun unlike(account: &signer, post_id: u64) acquires AptosSocialFeedState, Post {
         let sender_address = signer::address_of(account);
         let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
         assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
 
-        let post = table::borrow_mut(&mut state.post_item, post_id);
+        let post_address = *table::borrow_mut(&mut state.post_item, post_id);
+        let post = borrow_global_mut<Post>(post_address);
+
         let (is_found, index) = vector::index_of(&post.liked_by, &sender_address);
         assert!(is_found, ERROR_PROCESS_FAILED);
 
         vector::remove(&mut post.liked_by, index);
     }
 
-    public entry fun collect_post<CoinType>(account: &signer, post_id: u64) acquires AptosSocialFeedState {
+    public entry fun collect_post<CoinType>(account: &signer, post_id: u64) acquires AptosSocialFeedState, Post {
         let sender_address = signer::address_of(account);
         let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
         assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
 
-        let post = table::borrow_mut(&mut state.post_item, post_id);
+        let post_address = *table::borrow_mut(&mut state.post_item, post_id);
+        let post = borrow_global_mut<Post>(post_address);
         let post_listing = *table::borrow_mut(&mut state.post_listing, post_id);
 
         assert!(post.is_collectible, ERROR_PROCESS_FAILED);
@@ -435,7 +444,7 @@ module aptos_social::feeds {
         let coins = coin::withdraw<CoinType>(account, post.price);
         let price = coin::value<CoinType>(&coins);
         let (royalty_addr, royalty_charge) = listing::calculate_royalty(post_listing.listing, price);
-        let seller = listing::close(account, post_listing.listing, sender_address);
+        let seller = listing::close(post_listing.listing, sender_address);
         post.collector = sender_address;
         post.owner = sender_address;
         post.is_collectible = false;
@@ -458,13 +467,14 @@ module aptos_social::feeds {
         )
     }
 
-    public entry fun upvote_post(account: &signer, post_id: u64) acquires AptosSocialFeedState { 
+    public entry fun upvote_post(account: &signer, post_id: u64) acquires AptosSocialFeedState, Post { 
         let sender_address = signer::address_of(account);
         let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
         assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
         
-        let post = table::borrow_mut(&mut state.post_item, post_id);
+        let post_address = *table::borrow_mut(&mut state.post_item, post_id);
+        let post = borrow_global_mut<Post>(post_address);
 
         // If user has already downvoted, remove the downvote
         let (downvoted, downvote_index) = vector::index_of(&post.downvotes, &sender_address);
@@ -489,13 +499,14 @@ module aptos_social::feeds {
         profile::log_user_interaction(account, post.author, 2);
     }
 
-    public entry fun downvote_post(account: &signer, post_id: u64) acquires AptosSocialFeedState { 
+    public entry fun downvote_post(account: &signer, post_id: u64) acquires AptosSocialFeedState, Post { 
         let sender_address = signer::address_of(account);
         let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
         assert!(table::contains(&state.post_item, post_id), ERROR_NOT_FOUND);
         assert!(profile::profile_exists(sender_address), ERROR_UNAUTHORISED_ACCESS);
         
-        let post = table::borrow_mut(&mut state.post_item, post_id);
+        let post_address = *table::borrow_mut(&mut state.post_item, post_id);
+        let post = borrow_global_mut<Post>(post_address);
 
         // If user has already upvoted, remove the downvote
         let (upvoted, upvote_index) = vector::index_of(&post.upvotes, &sender_address);
@@ -524,10 +535,70 @@ module aptos_social::feeds {
      * APTOS SOCIAL FEED INTERNAL FUNCTIONS
      ****************************************************************/
 
+    inline fun create_post(
+        account: &signer,
+        content: String,
+        price: u64,
+        media_urls: vector<String>,
+        media_mimetypes: vector<String>,
+        metadata_uri: String,
+        is_nft_post: bool,
+        is_community_post: bool,
+        community: Option<address>
+    ): (bool, u64, address) acquires AptosSocialFeedState {
+        let creator_address = signer::address_of(account);
+        assert!(string::length(&content) > 0, ERROR_INVALID_STRING);
+        assert!(profile::profile_exists(creator_address), ERROR_UNAUTHORISED_ACCESS);
+
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
+        let post_id = state.post_count + 1;
+        
+        let hashtags = utils::extract_hashtags(&content);
+
+        let media = vector::empty<Media>();
+        let media_length = vector::length(&media_urls);
+        let i = 0;
+        while (i < media_length) {
+            let url = *vector::borrow(&media_urls, i);
+            let mimetype = *vector::borrow(&media_mimetypes, i);
+            let media_item = create_media(url, mimetype);
+            vector::push_back(&mut media, media_item);
+            i = i + 1;
+        };
+
+        let is_collectible = if (media_length > 0) {
+            is_nft_post
+        } else {
+            false
+        };
+
+        let (post_address, _) = store_post(
+            account,
+            state,
+            post_id,
+            content,
+            price,
+            media,
+            metadata_uri,
+            is_collectible,
+            0,
+            hashtags,
+            false,
+            is_community_post,
+            community
+        );
+
+        if(vector::length(&hashtags) > 0) {
+            trends::update_trending(hashtags, vector::empty<String>());
+        };
+
+        (is_collectible, post_id, post_address)
+    }
+
     inline fun store_post(
+        account: &signer,
         state: &mut AptosSocialFeedState,
         post_id: u64,
-        creator_address: address,
         content: String,
         price: u64,
         media: vector<Media>,
@@ -535,8 +606,11 @@ module aptos_social::feeds {
         is_collectible: bool,
         parent_id: u64,
         hashtags: vector<String>,
-        is_comment: bool
-    ): Post {
+        is_comment: bool,
+        is_community_post: bool,
+        community: Option<address>
+    ): (address, Post) {
+        let creator_address = signer::address_of(account);
         let post = Post {
             id: post_id,
             author: creator_address,
@@ -550,22 +624,36 @@ module aptos_social::feeds {
             created_at: timestamp::now_seconds(),
             is_collectible,
             liked_by: vector::empty(),
-            parent_id: 0,
+            parent_id,
             hashtag: hashtags,
             comment_count: 0,
             is_comment,
             upvotes: vector::empty(),
             downvotes: vector::empty(),
             hidden: false,
-            featured: false
+            featured: false,
+            is_community_post,
+            community,
         };
 
-        // let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
-        vector::push_back(&mut state.posts, post);
-        table::add(&mut state.post_item, post_id, post);
+        let constructor_ref = object::create_object(creator_address);
+        let object_signer = object::generate_signer(&constructor_ref);
+        let post_address = object::address_from_constructor_ref(&constructor_ref);
+        move_to(&object_signer, post);
+
+        vector::push_back(&mut state.posts, post_address);
+        table::add(&mut state.post_item, post_id, post_address);
         state.post_count = post_id;
 
-        post
+        if (!exists<UserPosts>(creator_address)) {
+            move_to(account, UserPosts { 
+                posts: vector::empty(), 
+            });
+        };
+        let users_posts_ref = borrow_global_mut<UserPosts>(creator_address);
+        vector::push_back(&mut users_posts_ref.posts, post_address);
+
+        (post_address, post)
     }
     
     // Store NFT Metadata to storage
@@ -600,7 +688,6 @@ module aptos_social::feeds {
             is_default = false;
         };
 
-        debug::print<bool>(&is_default);
         move_to(col_obj_signer, CollectionMetadata {
             created_at: timestamp::now_seconds(),
             logo_img: logo,
@@ -757,14 +844,15 @@ module aptos_social::feeds {
     }
 
     #[view]
-    public fun get_trending_posts(): vector<TrendingPost> acquires AptosSocialFeedState {
+    public fun get_trending_posts(): vector<TrendingPost> acquires AptosSocialFeedState, Post {
         let state = borrow_global<AptosSocialFeedState>(@aptos_social);
         let posts_array = state.posts;
         let posts = vector::empty<TrendingPost>();
         let length = vector::length(&posts_array);
         let i = 0;
         while (i < length) {
-            let post = *table::borrow(&state.post_item, i+1);
+            let post_address = *table::borrow(&state.post_item, i+1);
+            let post = *borrow_global_mut<Post>(post_address);
             let trending_score = calculate_trending_score(post);
 
             // Define a threshold for "trending" (e.g., trending score above 50)
@@ -808,14 +896,17 @@ module aptos_social::feeds {
     }
 
     #[view]
-    public fun get_feeds(): vector<PostItem> acquires AptosSocialFeedState {
-        let state = borrow_global<AptosSocialFeedState>(@aptos_social);
-        let posts_array = state.posts;
+    public fun get_feeds(page: u64, items_per_page: u64): IPaginatedData<PostItem> acquires AptosSocialFeedState, Post {
+        let state = borrow_global_mut<AptosSocialFeedState>(@aptos_social);
+        let post_feeds = state.posts;
+        vector::reverse(&mut post_feeds);
+        let posts_array = utils::paginate<address>(&post_feeds, page, items_per_page);
         let posts = vector::empty<PostItem>();
         let length = vector::length(&posts_array);
         let i = 0;
         while (i < length) {
-            let post = *table::borrow(&state.post_item, i+1);
+            let post_address = *vector::borrow(&posts_array, i);
+            let post = *borrow_global_mut<Post>(post_address);
             let downvotes = vector::length(&post.downvotes);
             let (_, downvote_threshold) = calculate_threshold(&post);            
             if(post.is_comment == false && 
@@ -827,25 +918,34 @@ module aptos_social::feeds {
             };
             i = i + 1;
         };
-        posts
+
+        let data = utils::make_paginated_data<PostItem>(posts, vector::length(&state.posts));
+
+        data
     }
 
     #[view]
-    public fun get_post_by_id(post_id: u64): PostItem acquires AptosSocialFeedState {
+    public fun get_post_by_id(post_id: u64): PostItem acquires AptosSocialFeedState, Post {
         let state = borrow_global<AptosSocialFeedState>(@aptos_social);
-        let post = *table::borrow(&state.post_item, post_id);
+        let post_address = *table::borrow(&state.post_item, post_id);
+        let post = *borrow_global_mut<Post>(post_address);
         generate_post_data(post)
     }
 
     #[view]
-    public fun get_posts_by_hashtag(hashtag: String): vector<PostItem> acquires AptosSocialFeedState {
+    public fun get_posts_by_hashtag(
+        hashtag: String,
+        page: u64,
+        items_per_page: u64
+    ): IPaginatedData<PostItem> acquires AptosSocialFeedState, Post {
         let state = borrow_global<AptosSocialFeedState>(@aptos_social);
-        let posts_array = state.posts;
+        let posts_array = utils::paginate<address>(&state.posts, page, items_per_page);
         let posts = vector::empty<PostItem>();
         let length = vector::length(&posts_array);
         let i = 0;
         while (i < length) {
-            let post = *table::borrow(&state.post_item, i+1);
+            let post_address = *vector::borrow(&posts_array, i);
+            let post = *borrow_global_mut<Post>(post_address);
             let downvotes = vector::length(&post.downvotes);
             let (_, downvote_threshold) = calculate_threshold(&post);  
             let l_hashtag = utils::to_lowercase(&hashtag);         
@@ -858,32 +958,33 @@ module aptos_social::feeds {
             };
             i = i + 1;
         };
-        posts
+        let data = utils::make_paginated_data<PostItem>(posts, vector::length(&state.posts));
+
+        data
     }
 
     #[view]
-    public fun get_owned_posts(username: String): vector<PostItem> acquires AptosSocialFeedState {
+    public fun get_owned_posts(username: String): IPaginatedData<PostItem> acquires UserPosts, Post {
         let creator_address = profile::username_to_address(username);
-        let state = borrow_global<AptosSocialFeedState>(@aptos_social);
+        let state = borrow_global_mut<UserPosts>(creator_address);
         let posts_array = state.posts;
         let posts = vector::empty<PostItem>();
         let length = vector::length(&posts_array);
         let i = 0;
         while (i < length) {
-            let post = *table::borrow(&state.post_item, i+1);
-            let downvotes = vector::length(&post.downvotes);
-            let (_, downvote_threshold) = calculate_threshold(&post);            
-            if(post.owner == creator_address) {
-                let post_item = generate_post_data(post);
-                vector::push_back(&mut posts, post_item);
-            };
+            let post_address = *vector::borrow(&state.posts, i);
+            let post = *borrow_global_mut<Post>(post_address);          
+            let post_item = generate_post_data(post);
+            vector::push_back(&mut posts, post_item);
             i = i + 1;
         };
-        posts
+        let data = utils::make_paginated_data<PostItem>(posts, vector::length(&state.posts));
+
+        data
     }
 
     #[view]
-    public fun get_comments(post_id: u64): vector<PostItem> acquires AptosSocialFeedState {
+    public fun get_comments(post_id: u64): vector<PostItem> acquires AptosSocialFeedState, Post {
         let state = borrow_global<AptosSocialFeedState>(@aptos_social);
         let comment_array = *table::borrow(&state.post_comments, post_id);
         let comments = vector::empty<PostItem>();
@@ -891,7 +992,8 @@ module aptos_social::feeds {
         let i = 0;
         while (i < length) {
             let comment_ref = *vector::borrow(&comment_array, i);
-            let comment = *table::borrow(&state.post_item, comment_ref.id);
+            let post_address = *table::borrow(&state.post_item, comment_ref.id);
+            let comment = *borrow_global_mut<Post>(post_address);
             let comment_item = generate_post_data(comment);
             vector::push_back(&mut comments, comment_item);
             i = i + 1;
@@ -905,7 +1007,7 @@ module aptos_social::feeds {
     }
 
     #[test_only]
-    public fun get_likes(id: u64): vector<address> acquires AptosSocialFeedState {
+    public fun get_likes(id: u64): vector<address> acquires AptosSocialFeedState, Post {
         let postItem = get_post_by_id(id);
         postItem.post.liked_by
     }

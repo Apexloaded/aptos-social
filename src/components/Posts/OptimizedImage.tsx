@@ -68,31 +68,33 @@ export default function OptimizedImage({
   // }
 
   return (
-    <Image
-      className={cn(
-        'duration-700 ease-in-out',
-        isLoading || loadFailed
-          ? 'scale-110 blur-2xl grayscale'
-          : 'scale-100 blur-0 grayscale-0',
-        fillContainer ? 'object-cover' : 'object-contain',
-        className
-      )}
-      src={imgSrc}
-      alt={alt}
-      fill={fillContainer}
-      width={!fillContainer ? width : undefined}
-      height={!fillContainer ? height : undefined}
-      sizes={sizes}
-      quality={quality}
-      priority={priority}
-      placeholder={placeholder}
-      blurDataURL={blurDataURL}
-      onLoad={() => {
-        setLoading(false);
-        setLoadFailed(false);
-      }}
-      onError={handleImageError}
-      {...props}
-    />
+    <div className='overflow-hidden'>
+      <Image
+        className={cn(
+          'duration-700 ease-in-out',
+          isLoading || loadFailed
+            ? 'scale-110 blur-2xl grayscale'
+            : 'scale-100 blur-0 grayscale-0',
+          fillContainer ? 'object-cover' : 'object-contain',
+          className
+        )}
+        src={imgSrc}
+        alt={alt}
+        fill={fillContainer}
+        width={!fillContainer ? width : undefined}
+        height={!fillContainer ? height : undefined}
+        sizes={sizes}
+        quality={quality}
+        priority={priority}
+        placeholder={placeholder}
+        blurDataURL={blurDataURL}
+        onLoad={() => {
+          setLoading(false);
+          setLoadFailed(false);
+        }}
+        onError={handleImageError}
+        {...props}
+      />
+    </div>
   );
 }

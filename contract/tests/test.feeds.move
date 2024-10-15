@@ -7,14 +7,10 @@ module aptos_social::feeds_test {
 
     use aptos_std::debug;
 
-    use aptos_framework::aptos_coin::{Self, AptosCoin};
-    use aptos_framework::object::{Self, Object, ObjectCore, ExtendRef};
-    use aptos_framework::coin;
+    use aptos_framework::object;
     use aptos_framework::account;
     use aptos_framework::timestamp;
 
-    use aptos_token_objects::collection::{Self, Collection};
-    
     use aptos_social::feeds::{Self, Media, CollectionMetadata, PostItem};
     use aptos_social::trends;
     use aptos_social::profile_test;
@@ -34,7 +30,7 @@ module aptos_social::feeds_test {
         // Test inputs
         let name = string::utf8(b"Aptos Social Collection");
         let description = string::utf8(b"This is the official Aptos Social Collection");
-        let uri = string::utf8(b"ipfs://some_metadata");
+        // let uri = string::utf8(b"ipfs://some_metadata");
         let max_supply = 10000;
         let custom_id = string::utf8(b"james-d");
         let royalty_percentage = option::some(10);
@@ -48,7 +44,7 @@ module aptos_social::feeds_test {
         let collection_1 = *vector::borrow(&result, vector::length(&result) - 1);
 
         let metadata = feeds::get_metadata(collection_1);
-        debug::print<CollectionMetadata>(&metadata);
+        // debug::print<CollectionMetadata>(&metadata);
 
         assert!(vector::length(&result) == 1, 1);
     }
@@ -71,10 +67,10 @@ module aptos_social::feeds_test {
         // feeds::init_module_for_test(account);
 
         // Test inputs
-        let token_id = b"token123";
+        //let token_id = b"token123";
         let content = string::utf8(b"Sample post content");
         let price = 1000;
-        let token_address = 0x1;
+        //let token_address = 0x1;
         let metadata_uri = string::utf8(b"ipfs://some_metadata");
         let media_urls = vector::singleton(string::utf8(b"http://example.com/image.png"));
         let media_mimetypes = vector::singleton(string::utf8(b"image/png"));
@@ -96,9 +92,9 @@ module aptos_social::feeds_test {
         // debug::print<address>(&creator_address);
         let owner_constructor_ref = &object::create_object(creator_address);
         let owner_obj_signer = &object::generate_signer(owner_constructor_ref);
-        let address_of_owner = signer::address_of(owner_obj_signer);
+        // let address_of_owner = signer::address_of(owner_obj_signer);
 
-        let owner = object::is_owner(collection_1, address_of_owner);
+        // let owner = object::is_owner(collection_1, address_of_owner);
 
         // debug::print<signer>(owner_obj_signer);
         // debug::print<bool>(&owner);
@@ -143,7 +139,7 @@ module aptos_social::feeds_test {
         };
         
         let post_comments = feeds::get_comments(1);
-        debug::print<vector<PostItem>>(&post_comments);
+        // debug::print<vector<PostItem>>(&post_comments);
         assert!(vector::length(&post_comments) == 3, 1);
     }
 

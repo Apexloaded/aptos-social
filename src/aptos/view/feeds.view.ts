@@ -10,7 +10,12 @@ import {
   get_trending_posts,
 } from '../aptos.function';
 import { ICollection } from '@/interfaces/collection.interface';
-import { IPost, IPostItem, TrendingPost } from '@/interfaces/feed.interface';
+import {
+  IPaginatedData,
+  IPost,
+  IPostItem,
+  TrendingPost,
+} from '@/interfaces/feed.interface';
 
 export const getAllCollections = async (
   address: string
@@ -42,11 +47,14 @@ export const getCollectionMetadata = async (
   return response[0];
 };
 
-export const getAllPosts = async (): Promise<IPostItem[]> => {
-  const response = await aptosClient().view<[Array<IPostItem>]>({
+export const getAllPosts = async (
+  page: number,
+  itemsPerPage: number
+): Promise<IPaginatedData<IPostItem>> => {
+  const response = await aptosClient().view<[IPaginatedData<IPostItem>]>({
     payload: {
       function: get_feeds,
-      functionArguments: [],
+      functionArguments: [page, itemsPerPage],
     },
   });
   return response[0];

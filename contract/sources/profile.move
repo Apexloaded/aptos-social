@@ -5,9 +5,8 @@ module aptos_social::profile {
     use std::vector;
 
     use aptos_std::table::{Self, Table};
-    use aptos_std::debug;
 
-    use aptos_framework::coin::{Self, Coin};
+    use aptos_framework::coin::{Self};
     use aptos_framework::event;
     use aptos_framework::timestamp;
     use aptos_framework::aptos_account;
@@ -275,7 +274,7 @@ module aptos_social::profile {
                     };
                     *vector::borrow_mut(scores, j) = temp;
                 } else {
-                    break; // No need to continue if the order is correct
+                    break // No need to continue if the order is correct
                 };
                 j = j - 1;
             };
@@ -318,7 +317,7 @@ module aptos_social::profile {
                 let potential_follow = *vector::borrow(followed_creator_following, j);
 
                 // Skip if the user is already following this person
-                let user_creator = table::borrow(&state.creators, account_addr);
+                // let user_creator = table::borrow(&state.creators, account_addr);
                 if (
                     !vector::contains(&followed_creator.followers, &potential_follow) && 
                     !vector::contains(&follower.following, &potential_follow) &&
@@ -335,7 +334,7 @@ module aptos_social::profile {
                             // If found, update the score
                             existing_score = existing_recommendation.score;
                             score_found = true;
-                            break;
+                            break
                         };
                         index = index + 1;
                     };

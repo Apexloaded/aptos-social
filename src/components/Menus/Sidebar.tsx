@@ -82,12 +82,12 @@ export default function Sidebar() {
         },
         {
           name: 'Settings',
-          href: routes.app.settings,
+          href: routes.app.settings.index,
           icon: SettingsIcon,
         },
         {
-          name: 'Community',
-          href: routes.app.community,
+          name: 'Communities',
+          href: routes.app.community.index,
           icon: UsersIcon,
         },
       ],

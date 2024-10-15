@@ -1,5 +1,4 @@
 module aptos_social::events {
-    use std::option::{Self, Option};
     use std::string::String;
 
     use aptos_framework::event;

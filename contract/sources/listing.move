@@ -1,12 +1,10 @@
 module aptos_social::listing {
-    use std::option::{Self, Option};
+    use std::option;
     use std::signer;
-    use std::string::{Self, String};
-    use std::vector;
 
     use aptos_std::math64;
 
-    use aptos_framework::object::{Self, ConstructorRef, DeleteRef, ExtendRef, Object, ObjectCore, TransferRef};
+    use aptos_framework::object::{Self, ConstructorRef, DeleteRef, ExtendRef, Object};
     use aptos_framework::timestamp;
 
     use aptos_token_objects::token::{Self, Token};
@@ -81,7 +79,6 @@ module aptos_social::listing {
     }
 
     public(friend) fun close(
-        closer: &signer,
         object: Object<Listing>,
         recipient: address,
     ): address acquires Listing {

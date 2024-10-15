@@ -27,6 +27,7 @@ interface AccountContextType {
   signAndSubmitBatchTransaction: (
     transactions: InputGenerateTransactionPayloadData[]
   ) => Promise<ExecutionFinishEventData | unknown>;
+  chainId?: number;
 }
 
 const AccountContext = createContext<AccountContextType | undefined>(undefined);

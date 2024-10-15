@@ -9,6 +9,7 @@ export const DATABASE_URL = process.env.DATABASE_URL || '';
 export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_AUTH_GOOGLE_ID;
 export const DEFAULT_COLLECTION = process.env.NEXT_PUBLIC_DEFAULT_COLLECTION;
 export const EXPLORER = process.env.NEXT_PUBLIC_APTOS_EXPLORER;
+export const ENCRYPTION_KEY = process.env.NEXT_PRIVATE_ENCRYPTION_KEY;
 
 export const PINATA_JWT = process.env.NEXT_PRIVATE_PINATA_JWT || '';
 export const PINATA_GATEWAY = process.env.NEXT_PRIVATE_PINATA_GATEWAY || '';

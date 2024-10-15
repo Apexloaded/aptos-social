@@ -1,10 +1,10 @@
-export const fullScreenPath = ['/live/video'];
+export const fullScreenPath = ['/welcome'];
 export const protectedRoutes = [
   '/feeds',
   '/welcome',
   '/**/mints',
   '/collections',
-  '/collections/create'
+  '/collections/create',
 ];
 export const publicRoutes = ['/', '/support'];
 
@@ -52,7 +52,15 @@ export const routes = {
       index: '/transactions',
       id: (id: string) => `/transactions/${id}`,
     },
-    community: '/community',
-    settings: '/settings',
+    community: {
+      index: '/communities',
+      create: '/communities/create',
+      view: (id: string) => `/communities/${id}`,
+      edit: (id: string) => `/communities/${id}/edit`,
+    },
+    settings: {
+      index: '/settings',
+      account: '/settings/account',
+    },
   },
 };

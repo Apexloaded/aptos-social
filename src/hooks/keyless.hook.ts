@@ -20,13 +20,24 @@ import { useAppSelector } from './redux.hook';
 import { selectAuth } from '@/slices/account/auth.slice';
 import { queryClient } from '@/providers/ReactQueryProvider';
 import { QueryKeys } from '@/config/query-keys';
+import { getChainId } from '@/aptos/view/getAccountAPTBalance';
 
 export default function useKeylessAccount() {
   const authState = useAppSelector(selectAuth);
   const [account, setAccount] = useState<KeylessAccount>();
   const [address, setAddress] = useState<`0x${string}`>();
   const [connected, setConnected] = useState<boolean>(false);
+  const [chainId, setChainId] = useState<number>();
   const { removeAllPairs } = useEphemeral();
+
+  useEffect(() => {
+    const init = async () => {
+      const chain_id = await getChainId();
+      setChainId(chain_id);
+      console.log(chain_id);
+    };
+    init();
+  }, [authState]);
 
   useEffect(() => {
     const init = () => {
@@ -71,6 +82,11 @@ export default function useKeylessAccount() {
       }
     }
 
+    const p1 = ephemeralKeyPair.getPublicKey().toString();
+    const p2 = keylessAccount.publicKey.toString();
+    console.log(p1 == p2);
+    console.log('epk', p1);
+    console.log('keyless', p2);
     setAccount(keylessAccount);
     storeKeylessAccount(keylessAccount);
     queryClient.invalidateQueries({ queryKey: [QueryKeys.Profile] });
@@ -155,5 +171,6 @@ export default function useKeylessAccount() {
     disconnect,
     address,
     signAndSubmitBatchTransaction,
+    chainId,
   };
 }

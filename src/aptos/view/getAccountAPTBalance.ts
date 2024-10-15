@@ -1,17 +1,30 @@
-import { aptosClient } from "@/utils/aptosClient";
+import { aptosClient } from '@/utils/aptosClient';
 
 export type GetAccountAPTBalanceArguments = {
   accountAddress: string;
 };
 
-export const getAccountAPTBalance = async (args: GetAccountAPTBalanceArguments): Promise<number> => {
+export const getAccountAPTBalance = async (
+  args: GetAccountAPTBalanceArguments
+): Promise<number> => {
   const { accountAddress } = args;
   const balance = await aptosClient().view<[number]>({
     payload: {
-      function: "0x1::coin::balance",
-      typeArguments: ["0x1::aptos_coin::AptosCoin"],
+      function: '0x1::coin::balance',
+      typeArguments: ['0x1::aptos_coin::AptosCoin'],
       functionArguments: [accountAddress],
     },
   });
   return balance[0];
+};
+
+export const getChainId = async () => {
+  const response = await aptosClient().view<[number]>({
+    payload: {
+      function: '0x1::chain_id::get',
+      typeArguments: [],
+      functionArguments: [],
+    },
+  });
+  return response[0];
 };
