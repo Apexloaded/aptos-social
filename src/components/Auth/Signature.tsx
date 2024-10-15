@@ -1,23 +1,20 @@
-"use client";
+'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { formatWalletAddress } from "@/utils/helpers";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { formatWalletAddress } from '@/utils/helpers';
 import {
   BadgeCheckIcon,
   ShieldEllipsisIcon,
   Wallet2Icon,
   XIcon,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/hooks/redux.hook";
-import useToast from "@/hooks/toast.hook";
-import {
-  useWallet,
-  SignMessagePayload,
-} from "@aptos-labs/wallet-adapter-react";
-import { HOSTNAME } from "@/config/constants";
-import { Dialog, DialogPanel } from "@headlessui/react";
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAppDispatch } from '@/hooks/redux.hook';
+import useToast from '@/hooks/toast.hook';
+import { useWallet } from '@aptos-labs/wallet-adapter-react';
+import { HOSTNAME } from '@/config/constants';
+import { Dialog, DialogPanel } from '@headlessui/react';
 
 type Props = {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -37,7 +34,7 @@ function SignInModal({ setIsOpen, isOpen }: Props) {
   const initSignMessage = async () => {
     try {
       if (!account) return;
-      loading({ msg: "Initializing..." });
+      loading({ msg: 'Initializing...' });
 
       const response = await fetch(
         `/api/auth/generate-nonce?address=${account.address}`
@@ -47,14 +44,14 @@ function SignInModal({ setIsOpen, isOpen }: Props) {
 
       console.log(data);
 
-      updateLoading({ msg: "Authenticating..." });
+      updateLoading({ msg: 'Authenticating...' });
       const signaturePayload = await signMessage({
         address: true,
         application: true,
         chainId: true,
         message:
-          "For your security and convenience, please sign this signature with your wallet address.",
-        nonce: "res.data.nonce",
+          'For your security and convenience, please sign this signature with your wallet address.',
+        nonce: 'res.data.nonce',
       });
       const signature = signaturePayload.signature.toString();
       console.log(signaturePayload);
@@ -73,7 +70,7 @@ function SignInModal({ setIsOpen, isOpen }: Props) {
       //   error({ msg: "Something went wrong" });
       // }
     } catch (e: any) {
-      error({ msg: e.code === 4001 ? "Failed to sign in!" : e.response.data });
+      error({ msg: e.code === 4001 ? 'Failed to sign in!' : e.response.data });
     }
   };
 
@@ -140,7 +137,7 @@ function SignInModal({ setIsOpen, isOpen }: Props) {
                   <div className="flex items-center mb-6 justify-between gap-4 mt-10">
                     <Button
                       className="rounded-3xl flex-1"
-                      variant={"outline"}
+                      variant={'outline'}
                       onClick={close}
                     >
                       Cancel
