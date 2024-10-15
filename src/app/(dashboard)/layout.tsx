@@ -1,5 +1,6 @@
 import Container from '@/components/Layouts/Container';
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: {

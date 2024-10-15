@@ -4,7 +4,7 @@ import { aptosClient } from '@/utils/aptosClient';
 import { isAuthenticated } from './auth.action';
 import { MODULE_ADDRESS } from '@/config/constants';
 import { getUserByName } from '@/aptos/view/profile.view';
-import { Notification } from '@/models/notifications.model';
+import Notification from '@/models/notifications.model';
 
 export async function createMentionNotification(content: string) {
   try {

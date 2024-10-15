@@ -217,13 +217,6 @@ function Welcome() {
           Aptos.Social onchain profile.
         </p>
       </div>
-      {/* <Image
-        src="https://bafkreigmo34gtfqduxgpfwlcpjsp6siarppmi4a6tib73chszqv3rt5zy4.ipfs.dweb.link"
-        alt="profile"
-        height={400}
-        width={400}
-        priority
-      /> */}
       <div className="flex flex-col w-full border border-medium/30 gap-4 bg-white rounded-xl p-5">
         <Controller
           control={control}
@@ -301,9 +294,6 @@ function Welcome() {
             disabled={isSubmitting || !isValid}
           >
             Mint Profile
-          </Button>
-          <Button onClick={mintName} type="button">
-            Mint Name
           </Button>
         </div>
       </div>

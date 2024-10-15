@@ -1,5 +1,6 @@
-import Welcome from "@/components/Auth/Welcome";
-import { AptosSocialLogo } from "@/components/Icons/Icons";
+import Welcome from '@/components/Auth/Welcome';
+import { AptosSocialLogo } from '@/components/Icons/Icons';
+import { Suspense } from 'react';
 
 export default function Register() {
   return (

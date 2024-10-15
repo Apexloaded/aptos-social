@@ -964,10 +964,14 @@ module aptos_social::feeds {
     }
 
     #[view]
-    public fun get_owned_posts(username: String): IPaginatedData<PostItem> acquires UserPosts, Post {
+    public fun get_owned_posts(
+        username: String,
+        page: u64,
+        items_per_page: u64
+    ): IPaginatedData<PostItem> acquires UserPosts, Post {
         let creator_address = profile::username_to_address(username);
         let state = borrow_global_mut<UserPosts>(creator_address);
-        let posts_array = state.posts;
+        let posts_array = utils::paginate<address>(&state.posts, page, items_per_page);
         let posts = vector::empty<PostItem>();
         let length = vector::length(&posts_array);
         let i = 0;

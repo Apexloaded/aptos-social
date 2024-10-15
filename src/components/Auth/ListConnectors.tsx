@@ -2,11 +2,7 @@
 
 import GoogleConnect from './connectors/GoogleConnector';
 
-type Props = {
-  isOpen: boolean;
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-};
-export function ListConnectors({ isOpen, setIsOpen }: Props) {
+export function ListConnectors() {
   return (
     <div className="flex flex-col border border-primary/50 rounded-lg overflow-hidden">
       <GoogleConnect />

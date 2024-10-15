@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '../ui/button';
 import { Controller, FieldValues, useForm } from 'react-hook-form';
 import { CameraIcon, ImageIcon } from 'lucide-react';
@@ -37,8 +37,6 @@ export default function CreateCommunity() {
   const [isPaid, setIsPaid] = useState<boolean>(false);
   const [logoImage, setLogoImage] = useState<File | null>(null);
   const [bannerImage, setBannerImage] = useState<File | null>(null);
-  const [key1, setKey1] = useState<{ privateKey: string; publicKey: string }>();
-  const [key2, setKey2] = useState<{ privateKey: string; publicKey: string }>();
   const { account } = useAccount();
 
   const {

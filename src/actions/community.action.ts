@@ -7,7 +7,7 @@ import {
   encryptContent,
   generateKeyPair,
 } from '@/lib/crypto';
-import { Community, ICommunity } from '@/models/community.model';
+import Community, { ICommunity } from '@/models/community.model';
 import { getSharedSecret } from '@noble/secp256k1';
 import ShortUniqueId from 'short-unique-id';
 

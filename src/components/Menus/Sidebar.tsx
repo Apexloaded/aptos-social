@@ -1,30 +1,18 @@
 'use client';
 
+import React from 'react';
 import {
   AtomIcon,
-  BanknoteIcon,
-  BellDotIcon,
   BookmarkIcon,
   BoxIcon,
-  CandlestickChart,
-  ChevronDownIcon,
   DatabaseIcon,
-  DotIcon,
-  EllipsisIcon,
-  HomeIcon,
-  LogOutIcon,
-  MailIcon,
-  PodcastIcon,
-  Rows3Icon,
   SettingsIcon,
-  Users2Icon,
+  UserIcon,
   UsersIcon,
   Wallet2Icon,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Icon } from '../Icons/Icons';
 import { routes } from '@/routes';
 import clsx from 'clsx';
@@ -38,7 +26,7 @@ import QuickProfile from './QuickProfile';
 export default function Sidebar() {
   const isLg = useMediaQuery('(max-width: 1024px)');
   const path = usePathname();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const sectionedNavigation: ISectionedMenu[] = [
     {
@@ -61,19 +49,34 @@ export default function Sidebar() {
       title: 'Chats',
       menu: [
         {
-          name: 'Notifications',
-          href: routes.app.notifications,
-          icon: BellDotIcon,
+          name: 'Bookmarks',
+          href: routes.app.bookmarks,
+          icon: BookmarkIcon,
         },
         {
-          name: 'Messages',
-          href: routes.app.messages.index,
-          icon: MailIcon,
+          name: 'Profile',
+          href: routes.app.profile(`${user?.username}`),
+          icon: UserIcon,
         },
       ],
     },
+    // {
+    //   title: 'Chats',
+    //   menu: [
+    //     {
+    //       name: 'Notifications',
+    //       href: routes.app.notifications,
+    //       icon: BellDotIcon,
+    //     },
+    //     {
+    //       name: 'Messages',
+    //       href: routes.app.messages.index,
+    //       icon: MailIcon,
+    //     },
+    //   ],
+    // },
     {
-      title: 'Chats',
+      title: 'Utils',
       menu: [
         {
           name: 'Wallet',
@@ -91,61 +94,6 @@ export default function Sidebar() {
           icon: UsersIcon,
         },
       ],
-    },
-  ];
-
-  const navigation = [
-    { name: 'Feeds', href: routes.home, icon: AtomIcon },
-    {
-      name: 'Explore',
-      href: routes.app.explore,
-      icon: BoxIcon,
-    },
-    {
-      name: 'Messages',
-      href: routes.app.messages.index,
-      icon: MailIcon,
-    },
-    // {
-    //   name: "Notifications",
-    //   href: "/notifications",
-    //   icon: BellDotIcon,
-    // },
-    {
-      name: 'Bookmarks',
-      href: routes.app.bookmarks,
-      icon: BookmarkIcon,
-    },
-    {
-      name: 'Connections',
-      href: routes.app.connections,
-      icon: Users2Icon,
-    },
-    // {
-    //   name: "My Collections",
-    //   href: "/collections",
-    //   icon: Rows3Icon,
-    // },
-    // {
-    //   name: "Stats",
-    //   href: "/stats",
-    //   icon: CandlestickChart,
-    // },
-
-    {
-      name: 'Community',
-      href: routes.app.community,
-      icon: UsersIcon,
-    },
-    {
-      name: 'Settings',
-      href: routes.app.settings,
-      icon: SettingsIcon,
-    },
-    {
-      name: 'Wallet',
-      href: routes.app.wallet.index,
-      icon: Wallet2Icon,
     },
   ];
 

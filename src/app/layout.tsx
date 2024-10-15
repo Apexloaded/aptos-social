@@ -8,7 +8,6 @@ import { AptosWalletProvider } from "@/providers/AptosProvider";
 import { ThemeProvider } from "@/context/theme.context";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AptosSocialProviders } from "@/providers/AptosSocialProviders";
-import { ScrollRestoration } from "@/components/ScrollRestoration";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -42,7 +41,6 @@ export default function RootLayout({
               <AptosSocialProviders>
                 <ThemeProvider>
                   <TooltipProvider delayDuration={100}>
-                    <ScrollRestoration />
                     {children}
                     <HelperProvider />
                   </TooltipProvider>

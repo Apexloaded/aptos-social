@@ -27,13 +27,13 @@ module aptos_social::test_community {
 
         let name = string::utf8(b"Aptos Social Community");
         let description = string::utf8(b"This is the official Aptos Social Community");
-        let entry_fee = option::some(4);
+        let entry_fee = 4;
         let is_messageable = true;
         let is_paid = true;
 
         profile::register_creator(account, string::utf8(b"User A"), string::utf8(b"user_a"), string::utf8(b"user_a@email.com"), string::utf8(b"pfp_A"));
-        community::create_community(account, name, description, entry_fee, is_messageable, is_paid, string::utf8(b"logo"), string::utf8(b"banner"));
-        community::create_community(account, string::utf8(b"Second"), description, entry_fee, is_messageable, is_paid, string::utf8(b"logo"), string::utf8(b"banner"));
+        community::create_community(account, string::utf8(b"7865467839"), name, description, entry_fee, is_messageable, is_paid, string::utf8(b"logo"), string::utf8(b"banner"));
+        community::create_community(account, string::utf8(b"0987654678"), string::utf8(b"Second"), description, entry_fee, is_messageable, is_paid, string::utf8(b"logo"), string::utf8(b"banner"));
 
         let communities = community::get_communities();
         // debug::print<vector<address>>(&communities);
@@ -83,7 +83,7 @@ module aptos_social::test_community {
         community::join_community<AptosCoin>(user1, com_addr);
 
         let members = community::get_community_members(com_addr);
-        assert!(vector::length(&members) == 1, 404);
+        assert!(vector::length(&members) == 2, 404);
     }
 
     #[test(aptos_framework = @0x1, account = @aptos_social, user1 = @0x201,)]
@@ -97,13 +97,13 @@ module aptos_social::test_community {
 
         let name = string::utf8(b"Aptos Social Community");
         let description = string::utf8(b"This is the official Aptos Social Community");
-        let entry_fee = option::some(4);
+        let entry_fee = 4;
         let is_messageable = true;
         let is_paid = true;
 
         profile::register_creator(account, string::utf8(b"User A"), string::utf8(b"user_a"), string::utf8(b"user_a@email.com"), string::utf8(b"pfp_A"));
         profile::register_creator(user1, string::utf8(b"User B"), string::utf8(b"user_b"), string::utf8(b"user_b@email.com"), string::utf8(b"pfp_B"));
-        community::create_community(account, name, description, entry_fee, is_messageable, is_paid, string::utf8(b"logo"), string::utf8(b"banner"));
+        community::create_community(account, string::utf8(b"987657889889"), name, description, entry_fee, is_messageable, is_paid, string::utf8(b"logo"), string::utf8(b"banner"));
 
         let user_addr = signer::address_of(user1);
 

@@ -104,7 +104,7 @@ module aptos_social::community {
 
         vector::push_back(&mut state.communities, community_address);
         table::add(&mut state.community_item, community_id, community_address);
-        table::add(&mut state.community_hash, community_hash, community_id)
+        table::add(&mut state.community_hash, community_hash, community_id);
 
         move_to(&object_signer, Community {
             id: community_id,

@@ -1,3 +1,4 @@
+import exp from 'constants';
 import mongoose from 'mongoose';
 
 export interface INotification {
@@ -33,6 +34,8 @@ const NotificationSchema = new mongoose.Schema(
   }
 );
 
-export const Notification =
+const Notification =
   mongoose.models.Notification ||
   mongoose.model('Notification', NotificationSchema);
+  
+export default Notification;
