@@ -18,7 +18,6 @@ function useEphemeral() {
 
   const getKeyPair = (nonce: string) => {
     const keyPairs = getKeyPairsFromStore();
-    console.log(keyPairs);
     const ephemeralKeyPair = keyPairs[nonce];
     if (!ephemeralKeyPair) return null;
     return validateKeyPair(nonce, ephemeralKeyPair);

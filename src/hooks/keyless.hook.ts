@@ -34,7 +34,6 @@ export default function useKeylessAccount() {
     const init = async () => {
       const chain_id = await getChainId();
       setChainId(chain_id);
-      console.log(chain_id);
     };
     init();
   }, [authState]);
@@ -82,11 +81,6 @@ export default function useKeylessAccount() {
       }
     }
 
-    const p1 = ephemeralKeyPair.getPublicKey().toString();
-    const p2 = keylessAccount.publicKey.toString();
-    console.log(p1 == p2);
-    console.log('epk', p1);
-    console.log('keyless', p2);
     setAccount(keylessAccount);
     storeKeylessAccount(keylessAccount);
     queryClient.invalidateQueries({ queryKey: [QueryKeys.Profile] });

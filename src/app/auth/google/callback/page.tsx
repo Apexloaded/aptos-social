@@ -9,7 +9,6 @@ export default function GoogleCallback() {
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
-    console.log(hashParams);
     const token = hashParams.get('id_token');
 
     if (token) {
