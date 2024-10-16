@@ -18,4 +18,8 @@ export enum QueryKeys {
   FungibleAssets = 'fungibleassets',
   Community = 'community',
   CommunityFeeds = 'communityFeeds',
+  CollectibleAssets = 'collectibleassets',
+  CollectedAssets = 'collectedassets',
+  Replies = 'replies',
+  Bookmarks = 'bookmarks',
 }

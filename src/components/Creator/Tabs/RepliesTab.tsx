@@ -1,30 +1,27 @@
 'use client';
 
-import React, {
-  Fragment,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-import PostItem from './PostItem';
+import React, { Fragment, useEffect, useRef } from 'react';
+import { IPaginatedData, IPostItem } from '@/interfaces/feed.interface';
+import EmptyBox from '../../EmptyBox';
+import PostItem from '../../Posts/PostItem';
+import { getOwnedPosts } from '@/aptos/view/feeds.view';
+import { useAccount } from '@/context/account.context';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { QueryKeys } from '@/config/query-keys';
-import { getPostByHashtag } from '@/aptos/view/feeds.view';
 import { sortPostByDate } from '@/lib/posts';
-import { useAccount } from '@/context/account.context';
-import { IPaginatedData, IPostItem } from '@/interfaces/feed.interface';
-import EmptyBox from '../EmptyBox';
+import { UserInterface } from '@/interfaces/user.interface';
 
 type Props = {
-  hashtag: string;
+  username: string;
+  user?: UserInterface;
 };
 
 const ITEMS_PER_PAGE = 4;
 
-export function PostsByHashtag({ hashtag }: Props) {
+function RepliesTab({ username, user }: Props) {
   const observerTarget = useRef<HTMLDivElement>(null);
-  const [shouldFetch, setShouldFetch] = useState(false);
+  const { address } = useAccount();
+  const isOwner = address == user?.wallet;
 
   const {
     data,
@@ -34,15 +31,15 @@ export function PostsByHashtag({ hashtag }: Props) {
     status,
     isFetching,
   } = useInfiniteQuery<IPaginatedData<IPostItem>, Error>({
-    queryKey: [QueryKeys.Hashtag, hashtag],
+    queryKey: [QueryKeys.Posts, address, QueryKeys.Replies],
     queryFn: async ({ pageParam = 1 }) => {
-      const _posts = await getPostByHashtag(
-        hashtag,
+      const _posts = await getOwnedPosts(
+        username,
         Number(pageParam),
         ITEMS_PER_PAGE
       );
       const sortedPost = sortPostByDate(_posts.data).filter(
-        (p) => !p.post.is_comment
+        (p) => p.post.is_comment
       );
       return {
         data: sortedPost,
@@ -59,32 +56,24 @@ export function PostsByHashtag({ hashtag }: Props) {
         : undefined;
     },
     initialPageParam: 1,
-    enabled: shouldFetch,
   });
 
-const handleObserver = useCallback(
-  (entries: IntersectionObserverEntry[]) => {
-    const [entry] = entries;
-    if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-      setShouldFetch(true);
-      fetchNextPage();
-    }
-  },
-  [fetchNextPage, hasNextPage, isFetchingNextPage]
-);
-
   useEffect(() => {
-    const element = observerTarget.current;
-    if (!element) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1.0 }
+    );
 
-    const observer = new IntersectionObserver(handleObserver, {
-      threshold: 0.1,
-      rootMargin: '200px',
-    });
-    observer.observe(element);
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
 
     return () => observer.disconnect();
-  }, [handleObserver]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const renderContent = () => {
     if (status === 'pending') {
@@ -98,8 +87,10 @@ const handleObserver = useCallback(
     if (data.pages[0].data.length === 0) {
       return (
         <EmptyBox
-          title="No Post"
-          message={`No post was found with hashtag ${hashtag}`}
+          title="Empty Replies"
+          message={`${
+            isOwner ? 'You' : `${username}`
+          } currently do not have any replies`}
         />
       );
     }
@@ -110,16 +101,20 @@ const handleObserver = useCallback(
           data.pages.map((page, i) => (
             <Fragment key={i}>
               {page.data.map((post) => (
-                <PostItem
+                <div
                   key={post.post.id}
-                  post={post.post}
-                  creator={post.creator}
-                  className="rounded-none shadow-none"
-                />
+                  className="border-b border-light last:border-none"
+                >
+                  <PostItem
+                    post={post.post}
+                    creator={post.creator}
+                    className="rounded-none shadow-none"
+                  />
+                </div>
               ))}
             </Fragment>
           ))}
-        {(isFetching || isFetchingNextPage) && (
+        {isFetching && isFetchingNextPage && (
           <div className="text-center mt-4">
             <div
               className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
@@ -131,21 +126,16 @@ const handleObserver = useCallback(
             </div>
           </div>
         )}
-        {!hasNextPage && (
-          <p className="text-center text-gray-500 mt-6">
-            No more posts to load.
-          </p>
-        )}
       </>
     );
   };
 
   return (
-    <div className="mx-auto w-full flex flex-col gap-8">
+    <>
       {renderContent()}
-      {hasNextPage && (
-        <div ref={observerTarget} className="h-4 mb-2" aria-hidden="true" />
-      )}
-    </div>
+      <div ref={observerTarget} className="h-4 mb-2" aria-hidden="true" />
+    </>
   );
 }
+
+export default RepliesTab;

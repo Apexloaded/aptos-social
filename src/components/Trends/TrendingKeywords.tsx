@@ -34,6 +34,7 @@ export default function TrendingKeywords({ className }: Props) {
       {trends.map((trend, i) => (
         <Link
           key={i}
+          prefetch={true}
           href={routes.app.hashtag.hashtag(trend.keyword)}
           className="flex-1 py-2 px-4 hover:bg-secondary dark:hover:bg-dark/70"
         >

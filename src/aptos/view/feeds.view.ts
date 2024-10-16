@@ -91,22 +91,28 @@ export const getPostComments = async (postId: number): Promise<IPostItem[]> => {
 };
 
 export const getPostByHashtag = async (
-  hashtag: string
-): Promise<IPostItem[]> => {
-  const response = await aptosClient().view<[Array<IPostItem>]>({
+  hashtag: string,
+  page: number,
+  itemsPerPage: number
+): Promise<IPaginatedData<IPostItem>> => {
+  const response = await aptosClient().view<[IPaginatedData<IPostItem>]>({
     payload: {
       function: get_posts_by_hashtag,
-      functionArguments: [hashtag],
+      functionArguments: [hashtag, page, itemsPerPage],
     },
   });
   return response[0];
 };
 
-export const getOwnedPosts = async (username: string): Promise<IPostItem[]> => {
-  const response = await aptosClient().view<[Array<IPostItem>]>({
+export const getOwnedPosts = async (
+  username: string,
+  page: number,
+  itemsPerPage: number
+): Promise<IPaginatedData<IPostItem>> => {
+  const response = await aptosClient().view<[IPaginatedData<IPostItem>]>({
     payload: {
       function: get_owned_posts,
-      functionArguments: [username],
+      functionArguments: [username, page, itemsPerPage],
     },
   });
   return response[0];

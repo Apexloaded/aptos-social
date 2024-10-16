@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { memo, useEffect } from 'react';
 import { Button } from '../ui/button';
 import {
   BellRingIcon,
@@ -27,7 +27,7 @@ import CommunityLabel from '../Community/CommunityLabel';
 interface Props extends IPostItem {
   className?: string;
 }
-export function PostItem({ post, creator, className }: Props) {
+const PostItem = memo(function PostItem({ post, creator, className }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const username = creator.username;
@@ -135,4 +135,6 @@ export function PostItem({ post, creator, className }: Props) {
       {/* <div>Hash Tags</div> */}
     </div>
   );
-}
+});
+
+export default PostItem;

@@ -971,18 +971,20 @@ module aptos_social::feeds {
     ): IPaginatedData<PostItem> acquires UserPosts, Post {
         let creator_address = profile::username_to_address(username);
         let state = borrow_global_mut<UserPosts>(creator_address);
-        let posts_array = utils::paginate<address>(&state.posts, page, items_per_page);
+        let post_feeds = state.posts;
+        vector::reverse(&mut post_feeds);
+        let posts_array = utils::paginate<address>(&post_feeds, page, items_per_page);
         let posts = vector::empty<PostItem>();
         let length = vector::length(&posts_array);
         let i = 0;
         while (i < length) {
-            let post_address = *vector::borrow(&state.posts, i);
+            let post_address = *vector::borrow(&post_feeds, i);
             let post = *borrow_global_mut<Post>(post_address);          
             let post_item = generate_post_data(post);
             vector::push_back(&mut posts, post_item);
             i = i + 1;
         };
-        let data = utils::make_paginated_data<PostItem>(posts, vector::length(&state.posts));
+        let data = utils::make_paginated_data<PostItem>(posts, vector::length(&post_feeds));
 
         data
     }

@@ -1,30 +1,27 @@
 'use client';
 
-import React, {
-  Fragment,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-import PostItem from './PostItem';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { getOwnedPosts } from '@/aptos/view/feeds.view';
+import EmptyBox from '@/components/EmptyBox';
+import PostItem from '@/components/Posts/PostItem';
 import { QueryKeys } from '@/config/query-keys';
-import { getPostByHashtag } from '@/aptos/view/feeds.view';
-import { sortPostByDate } from '@/lib/posts';
 import { useAccount } from '@/context/account.context';
 import { IPaginatedData, IPostItem } from '@/interfaces/feed.interface';
-import EmptyBox from '../EmptyBox';
+import { UserInterface } from '@/interfaces/user.interface';
+import { sortPostByDate } from '@/lib/posts';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import React, { Fragment, useCallback, useEffect, useRef } from 'react';
 
 type Props = {
-  hashtag: string;
+  username: string;
+  user?: UserInterface;
 };
 
 const ITEMS_PER_PAGE = 4;
 
-export function PostsByHashtag({ hashtag }: Props) {
+function CollectibleTab({ username, user }: Props) {
   const observerTarget = useRef<HTMLDivElement>(null);
-  const [shouldFetch, setShouldFetch] = useState(false);
+  const { address, connected } = useAccount();
+  const isOwner = address == user?.wallet;
 
   const {
     data,
@@ -34,15 +31,15 @@ export function PostsByHashtag({ hashtag }: Props) {
     status,
     isFetching,
   } = useInfiniteQuery<IPaginatedData<IPostItem>, Error>({
-    queryKey: [QueryKeys.Hashtag, hashtag],
+    queryKey: [QueryKeys.Posts, address, QueryKeys.CollectibleAssets],
     queryFn: async ({ pageParam = 1 }) => {
-      const _posts = await getPostByHashtag(
-        hashtag,
+      const _posts = await getOwnedPosts(
+        username,
         Number(pageParam),
         ITEMS_PER_PAGE
       );
       const sortedPost = sortPostByDate(_posts.data).filter(
-        (p) => !p.post.is_comment
+        (p) => !p.post.is_comment && p.post.author == user?.wallet
       );
       return {
         data: sortedPost,
@@ -59,31 +56,29 @@ export function PostsByHashtag({ hashtag }: Props) {
         : undefined;
     },
     initialPageParam: 1,
-    enabled: shouldFetch,
+    enabled: !!username && connected && !!user,
   });
 
-const handleObserver = useCallback(
-  (entries: IntersectionObserverEntry[]) => {
-    const [entry] = entries;
-    if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-      setShouldFetch(true);
-      fetchNextPage();
-    }
-  },
-  [fetchNextPage, hasNextPage, isFetchingNextPage]
-);
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
 
   useEffect(() => {
     const element = observerTarget.current;
-    if (!element) return;
+    const option = { threshold: 0.1 };
 
-    const observer = new IntersectionObserver(handleObserver, {
-      threshold: 0.1,
-      rootMargin: '200px',
-    });
-    observer.observe(element);
+    const observer = new IntersectionObserver(handleObserver, option);
+    if (element) observer.observe(element);
 
-    return () => observer.disconnect();
+    return () => {
+      if (element) observer.unobserve(element);
+    };
   }, [handleObserver]);
 
   const renderContent = () => {
@@ -92,14 +87,16 @@ const handleObserver = useCallback(
     }
 
     if (status === 'error') {
-      return <div className="text-center mt-4">Error: fetching replies</div>;
+      return (
+        <div className="text-center mt-4">Error: fetching collectibles</div>
+      );
     }
 
     if (data.pages[0].data.length === 0) {
       return (
         <EmptyBox
-          title="No Post"
-          message={`No post was found with hashtag ${hashtag}`}
+          title={'No collectible'}
+          message={'There is no collectible on this profile'}
         />
       );
     }
@@ -110,12 +107,16 @@ const handleObserver = useCallback(
           data.pages.map((page, i) => (
             <Fragment key={i}>
               {page.data.map((post) => (
-                <PostItem
+                <div
                   key={post.post.id}
-                  post={post.post}
-                  creator={post.creator}
-                  className="rounded-none shadow-none"
-                />
+                  className="border-b border-light last:border-none"
+                >
+                  <PostItem
+                    post={post.post}
+                    creator={post.creator}
+                    className="rounded-none shadow-none"
+                  />
+                </div>
               ))}
             </Fragment>
           ))}
@@ -131,21 +132,16 @@ const handleObserver = useCallback(
             </div>
           </div>
         )}
-        {!hasNextPage && (
-          <p className="text-center text-gray-500 mt-6">
-            No more posts to load.
-          </p>
-        )}
       </>
     );
   };
 
   return (
-    <div className="mx-auto w-full flex flex-col gap-8">
+    <>
       {renderContent()}
-      {hasNextPage && (
-        <div ref={observerTarget} className="h-4 mb-2" aria-hidden="true" />
-      )}
-    </div>
+      <div ref={observerTarget} className="h-4 mb-2" aria-hidden="true" />
+    </>
   );
 }
+
+export default CollectibleTab;

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { QueryKeys } from '@/config/query-keys';
 import { getTrendingPosts } from '@/aptos/view/feeds.view';
 import { mapPost } from '@/lib/posts';
-import { PostItem } from '../Posts/PostItem';
+import PostItem from '../Posts/PostItem';
 import { IPostItem } from '@/interfaces/feed.interface';
 
 export function TrendingPosts() {

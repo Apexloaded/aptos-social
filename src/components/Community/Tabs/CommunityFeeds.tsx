@@ -5,7 +5,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { QueryKeys } from '@/config/query-keys';
 import { sortPostByDate } from '@/lib/posts';
 import { getPublicCommunityPosts } from '@/aptos/view/community.view';
-import { PostItem } from '../../Posts/PostItem';
+import PostItem from '../../Posts/PostItem';
 import { IPaginatedData, IPostItem } from '@/interfaces/feed.interface';
 
 const ITEMS_PER_PAGE = 10;
@@ -84,7 +84,9 @@ export default function CommunityFeeds() {
           </div>
         </div>
       )}
-      <div ref={observerTarget} className="h-4" aria-hidden="true" />
+      {hasNextPage && (
+        <div ref={observerTarget} className="h-4" aria-hidden="true" />
+      )}
     </div>
   );
 }

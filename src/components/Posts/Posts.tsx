@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, Fragment } from 'react';
-import { PostItem } from './PostItem';
+import PostItem from './PostItem';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { QueryKeys } from '@/config/query-keys';
 import { getAllPosts } from '@/aptos/view/feeds.view';
@@ -9,7 +9,7 @@ import { sortPostByDate } from '@/lib/posts';
 import NewPost from './NewPost';
 import { IPaginatedData, IPostItem } from '@/interfaces/feed.interface';
 
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 2;
 export function Posts() {
   // const [posts, setPosts] = useState<IPostItem[]>([]);
   // const { data } = useQuery({
@@ -94,7 +94,7 @@ export function Posts() {
           </div>
         </div>
       )}
-      <div ref={observerTarget} className="h-10 mb-2" aria-hidden="true" />
+      <div ref={observerTarget} className="h-4 mb-2" aria-hidden="true" />
     </div>
   );
 }

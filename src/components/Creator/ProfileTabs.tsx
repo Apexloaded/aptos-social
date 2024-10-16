@@ -10,12 +10,15 @@ import { useAuth } from '@/context/auth.context';
 import { useQuery } from '@tanstack/react-query';
 import { getOwnedPosts } from '@/aptos/view/feeds.view';
 import { sortPostByDate } from '@/lib/posts';
-import UserFeeds from './UserFeeds';
-import Collected from './Collected';
+import UserFeeds from './Tabs/RepliesTab';
+import Collected from './Tabs/CollectedTab';
 import EmptyBox from '../EmptyBox';
 import { useAccount } from '@/context/account.context';
 import { UserInterface } from '@/interfaces/user.interface';
 import { useRouter, useSearchParams } from 'next/navigation';
+import CollectibleTab from './Tabs/CollectibleTab';
+import CollectedTab from './Tabs/CollectedTab';
+import RepliesTab from './Tabs/RepliesTab';
 
 type Props = {
   username: string;
@@ -28,19 +31,9 @@ function ProfileTabs({ username }: Props) {
     searchParams.get('tab') || 'collectibles'
   );
 
-  const [posts, setPosts] = useState<IPostItem[]>([]);
   const [user, setUser] = useState<UserInterface>();
-  const [replies, setReplies] = useState<IPostItem[]>([]);
-  const [collected, setCollected] = useState<IPostItem[]>([]);
-  const { address } = useAccount();
   const { user: authUser, findCreator } = useAuth();
   const { data: userData } = findCreator(username);
-
-  const { data } = useQuery({
-    queryKey: [],
-    queryFn: () => getOwnedPosts(username),
-    enabled: !!username,
-  });
 
   useEffect(() => {
     if (userData) {
@@ -49,26 +42,6 @@ function ProfileTabs({ username }: Props) {
       setUser({ ...payload, created_at: date });
     }
   }, [userData]);
-
-  useEffect(() => {
-    if (data && data.length > 0 && user) {
-      const _posts = data as IPostItem[];
-      const filterReplies = sortPostByDate(
-        _posts.filter((p) => p.post.is_comment)
-      );
-      const sortedPost = sortPostByDate(
-        _posts.filter(
-          (p) => !p.post.is_comment && p.post.author == user?.wallet
-        )
-      );
-      const collectedPost = sortPostByDate(
-        _posts.filter((p) => p.post.collector == user?.wallet)
-      );
-      setReplies(filterReplies);
-      setPosts(sortedPost);
-      setCollected(collectedPost);
-    }
-  }, [data, user]);
 
   const onTabChange = (tabId: string) => {
     router.push(`?tab=${tabId}`, { scroll: false });
@@ -114,21 +87,13 @@ function ProfileTabs({ username }: Props) {
             )}
           </TabsList>
           <TabsContent value="collectibles" activeTabId={activeTab}>
-            <UserFeeds
-              posts={posts}
-              title="No collectible found"
-              msg={`${username} haven't minted any collectible yet`}
-            />
+            <CollectibleTab username={username} user={user} />
           </TabsContent>
           <TabsContent value="collected" activeTabId={activeTab}>
-            <Collected posts={collected} username={`${username}`} />
+            <CollectedTab username={username} user={user} />
           </TabsContent>
           <TabsContent value="replies" activeTabId={activeTab}>
-            <UserFeeds
-              posts={replies}
-              title="No reply found"
-              msg={`${username} have not replied any post yet`}
-            />
+            <RepliesTab username={username} user={user} />
           </TabsContent>
           <TabsContent value="community" activeTabId={activeTab}>
             <div>
