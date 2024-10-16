@@ -83,16 +83,16 @@ export default function Sidebar() {
           href: routes.app.wallet.index,
           icon: Wallet2Icon,
         },
-        {
-          name: 'Settings',
-          href: routes.app.settings.index,
-          icon: SettingsIcon,
-        },
-        {
-          name: 'Communities',
-          href: routes.app.community.index,
-          icon: UsersIcon,
-        },
+        // {
+        //   name: 'Settings',
+        //   href: routes.app.settings.index,
+        //   icon: SettingsIcon,
+        // },
+        // {
+        //   name: 'Communities',
+        //   href: routes.app.community.index,
+        //   icon: UsersIcon,
+        // },
       ],
     },
   ];

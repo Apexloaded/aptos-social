@@ -38,11 +38,11 @@ function BookmarkFeeds() {
       )}
 
       {bookmarks.length > 0 && (
-        <>
+        <div className='flex flex-col gap-5'>
           {bookmarks.map((b, i) => (
             <BookmarkItem key={i} bookmark={b} />
           ))}
-        </>
+        </div>
       )}
       {bookmarks.length < 1 && !isLoading && (
         <EmptyBox title="No Bookmarks" message="Try to bookmark a post" />

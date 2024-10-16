@@ -74,7 +74,7 @@ export default function QuickProfile() {
               <p>Profile</p>
             </div>
           </Link>
-          <Link href="" className="hover:bg-muted dark:hover:bg-dark px-4 py-3">
+          <Link href={routes.app.bookmarks} className="hover:bg-muted dark:hover:bg-dark px-4 py-3">
             <div className="flex items-center gap-3 text-dark dark:text-white">
               <BookmarkIcon size={20} />
               <p>Bookmarks</p>
@@ -82,12 +82,12 @@ export default function QuickProfile() {
           </Link>
         </div>
         <div className="border-t flex flex-col py-2">
-          <Link href="" className="hover:bg-muted dark:hover:bg-dark px-4 py-3">
+          {/* <Link href="" className="hover:bg-muted dark:hover:bg-dark px-4 py-3">
             <div className="flex items-center gap-3 text-dark dark:text-white">
               <SettingsIcon size={20} />
               <p>Settings</p>
             </div>
-          </Link>
+          </Link> */}
           <div
             role="button"
             className="hover:bg-muted dark:hover:bg-dark px-4 py-3 flex items-center justify-between"
@@ -105,12 +105,12 @@ export default function QuickProfile() {
           </div>
         </div>
         <div className="border-t flex flex-col py-2">
-          <Link href="" className="hover:bg-muted dark:hover:bg-dark px-4 py-3">
+          {/* <Link href="" className="hover:bg-muted dark:hover:bg-dark px-4 py-3">
             <div className="flex items-center gap-3 text-dark dark:text-white">
               <HelpCircleIcon size={20} />
               <p>Support</p>
             </div>
-          </Link>
+          </Link> */}
           <div
             role="button"
             onClick={logout}
