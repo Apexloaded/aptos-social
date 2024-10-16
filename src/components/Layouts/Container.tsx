@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from '../Menus/Sidebar';
 import { useAppSelector } from '@/hooks/redux.hook';
 import { selectSidebar } from '@/slices/sidebar/sidebar.slice';
@@ -16,8 +16,14 @@ function Container({
 }>) {
   const pathname = usePathname();
   const isSidebar = useAppSelector(selectSidebar);
+  const [isFullScreenPath, setIsFullScreenPath] = useState<boolean>(false);
 
-  const isFullScreenPath = fullScreenPath.includes(pathname);
+  useEffect(() => {
+    if (pathname) {
+      const isFull = fullScreenPath.includes(pathname);
+      setIsFullScreenPath(isFull);
+    }
+  }, [pathname]);
 
   return (
     <div
